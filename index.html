@@ -1211,11 +1211,19 @@ function getExtraProgress(bk, date) {
   const b = getBuildings()[bk];
   let total=0, done=0;
   for (const [cat, items] of Object.entries(b.extra)) {
+    if (cat === 'outer_areas') continue; // outer areas tracked separately
     const checked = getChecked(bk, '_extra_'+cat, date);
     total += items.length;
     done += Object.values(checked).filter(Boolean).length;
   }
   return {total, done, pct: total ? Math.round(done/total*100) : 0};
+}
+function getOuterProgress(bk, date) {
+  const b = getBuildings()[bk];
+  const items = (b.extra && b.extra.outer_areas) || [];
+  const checked = getChecked(bk, '_extra_outer_areas', date);
+  const done = Object.values(checked).filter(Boolean).length;
+  return {total: items.length, done, pct: items.length ? Math.round(done/items.length*100) : 0};
 }
 function getFloorProgress(bk, fn, date) {
   const items = getBuildings()[bk].floors[fn] || [];
@@ -1300,6 +1308,12 @@ function showDashboard_render() {
       + (extraPending.length>SHOW_N?`<div style="font-size:10px;color:var(--text-muted);margin-top:2px">+${extraPending.length-SHOW_N} more extra pending…</div>`:'') : '';
 
     const ep = getExtraProgress(bk, viewingDate);
+    const op = getOuterProgress(bk, viewingDate);
+    const outerPending = getOuterPending(bk, viewingDate);
+    const outerPendingCardHtml = outerPending.length ? outerPending.slice(0,SHOW_N).map(p2=>`
+      <div class="card-pending-item" style="color:#2E7D32">${p2.task}</div>`).join('')
+      + (outerPending.length>SHOW_N?`<div style="font-size:10px;color:var(--text-muted);margin-top:2px">+${outerPending.length-SHOW_N} more outer pending…</div>`:'') : '';
+
     cards += `<div class="summary-card" onclick="showBuilding('${esc(bk)}')">
       <div class="card-building">Building</div>
       <div class="card-name">${b.name}</div>
@@ -1321,8 +1335,21 @@ function showDashboard_render() {
           <div class="stat"><div class="stat-num" style="color:${ep.total-ep.done?'var(--orange)':'var(--green)'}">${ep.total-ep.done}</div><div class="stat-label">Pending</div></div>
           <div class="stat"><div class="stat-num" style="color:#9A6F00">${ep.total}</div><div class="stat-label">Total</div></div>
         </div>
-        <div class="prog-wrap"><div class="prog-bar" style="width:${ep.pct}%;background:linear-gradient(90deg,#D4A843,#f0c040)"></div></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:2px;">
+          <div class="prog-wrap" style="flex:1;margin-bottom:0;"><div class="prog-bar" style="width:${ep.pct}%;background:linear-gradient(90deg,#D4A843,#f0c040)"></div></div>
+          ${_taskStars(ep.pct)}
+        </div>
         <div class="prog-pct" style="color:#9A6F00">${ep.pct}% Extra Complete</div>
+      </div>` : ''}
+      ${op.total ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">🌿 Outer Areas</div>
+        <div class="card-stats">
+          <div class="stat"><div class="stat-num" style="color:#2E7D32">${op.done}</div><div class="stat-label">Done</div></div>
+          <div class="stat"><div class="stat-num" style="color:${op.total-op.done?'var(--orange)':'var(--green)'}">${op.total-op.done}</div><div class="stat-label">Pending</div></div>
+          <div class="stat"><div class="stat-num" style="color:#2E7D32">${op.total}</div><div class="stat-label">Total</div></div>
+        </div>
+        <div class="prog-wrap"><div class="prog-bar" style="width:${op.pct}%;background:linear-gradient(90deg,#2E7D32,#66BB6A)"></div></div>
+        <div class="prog-pct" style="color:#2E7D32">${op.pct}% Outer Complete</div>
       </div>` : ''}
       <div class="card-remarks ${hasRemark?'has-remark':''}" id="card-remark-${encodeKey(bk)}">${hasRemark?'📝 '+remark:''}</div>
       <div class="card-notes-section ${notes.length?'has-data':''}">
@@ -1331,11 +1358,15 @@ function showDashboard_render() {
       </div>
       <div class="card-notes-section ${pending.length?'has-data':''}">
         <div style="font-size:10px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">⏳ Pending Tasks</div>
-        ${pendingCardHtml || (!extraPending.length ? '<div style="font-size:11px;color:var(--green)">✅ All daily tasks done!</div>' : '')}
+        ${pendingCardHtml || (!extraPending.length && !outerPending.length ? '<div style="font-size:11px;color:var(--green)">✅ All daily tasks done!</div>' : '')}
       </div>
       <div class="card-notes-section ${extraPending.length?'has-data':''}">
         <div style="font-size:10px;font-weight:700;color:#9A6F00;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">✨ Extra Schedule Pending</div>
         ${extraPendingCardHtml || '<div style="font-size:11px;color:var(--green)">✅ All extra tasks done!</div>'}
+      </div>
+      <div class="card-notes-section ${outerPending.length?'has-data':''}">
+        <div style="font-size:10px;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">🌿 Outer Areas Pending</div>
+        ${outerPendingCardHtml || '<div style="font-size:11px;color:var(--green)">✅ All outer tasks done!</div>'}
       </div>
     </div>`;
   }
@@ -1403,8 +1434,10 @@ function renderBuildingView() {
       + `</button>`;
   }
   floorTabsHtml += `<button class="ftab extra-tab ${currentFloor==='_extra'?'active':''}" onclick="switchFloor('_extra')">✨ Extra Schedule</button>`;
+  floorTabsHtml += `<button class="ftab extra-tab ${currentFloor==='_outer'?'active':''}" onclick="switchFloor('_outer')" style="border-color:#2E7D32;color:${currentFloor==='_outer'?'white':'#2E7D32'};${currentFloor==='_outer'?'background:#2E7D32;':''}">🌿 Outer Areas</button>`;
 
   const ep = getExtraProgress(bk, viewingDate);
+  const op = getOuterProgress(bk, viewingDate);
   // Summary bar
   const sb = `<div class="summary-bar" id="summaryBar">
     <div class="sb-stat"><div class="sb-num">${floorNames.length}</div><div class="sb-lbl">Floors</div></div>
@@ -1426,8 +1459,21 @@ function renderBuildingView() {
       <div class="sb-stat"><div class="sb-num" style="color:#9A6F00" id="sb-ex-done">${ep.done}</div><div class="sb-lbl">Done</div></div>
       <div class="sb-stat"><div class="sb-num" style="color:${ep.total-ep.done?'var(--orange)':'var(--green)'}" id="sb-ex-pend">${ep.total-ep.done}</div><div class="sb-lbl">Pending</div></div>
       <div style="min-width:100px">
-        <div class="sb-prog-wrap" style="margin-bottom:4px"><div class="sb-prog-fill" id="sb-ex-prog" style="width:${ep.pct}%;background:linear-gradient(90deg,#D4A843,#f0c040)"></div></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <div class="sb-prog-wrap" style="flex:1;margin-bottom:0;"><div class="sb-prog-fill" id="sb-ex-prog" style="width:${ep.pct}%;background:linear-gradient(90deg,#D4A843,#f0c040)"></div></div>
+          <span id="sb-ex-stars">${_taskStars(ep.pct).replace('<div class','<span class').replace('</div>','</span>')}</span>
+        </div>
         <div class="sb-prog-pct" id="sb-ex-pct" style="color:#9A6F00">${ep.pct}% Extra Complete</div>
+      </div>
+    </div>` : ''}
+    ${op.total ? `<div class="sb-div"></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="font-size:11px;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">🌿 Outer</div>
+      <div class="sb-stat"><div class="sb-num" style="color:#2E7D32" id="sb-oa-done">${op.done}</div><div class="sb-lbl">Done</div></div>
+      <div class="sb-stat"><div class="sb-num" style="color:${op.total-op.done?'var(--orange)':'var(--green)'}" id="sb-oa-pend">${op.total-op.done}</div><div class="sb-lbl">Pending</div></div>
+      <div style="min-width:100px">
+        <div class="sb-prog-wrap" style="margin-bottom:4px;"><div class="sb-prog-fill" id="sb-oa-prog" style="width:${op.pct}%;background:linear-gradient(90deg,#2E7D32,#66BB6A)"></div></div>
+        <div class="sb-prog-pct" id="sb-oa-pct" style="color:#2E7D32">${op.pct}% Outer Complete</div>
       </div>
     </div>` : ''}
     <div class="cl-actions no-print">
@@ -1497,6 +1543,7 @@ function refreshInfoPanels() {
   const notes = getBuildingNotes(bk, viewingDate);
   const pending = getBuildingPending(bk, viewingDate);
   const extraPending = getExtraPending(bk, viewingDate);
+  const outerPending = getOuterPending(bk, viewingDate);
   const nb = document.getElementById('notes-panel-body');
   const pb = document.getElementById('pending-panel-body');
   const nc = document.getElementById('notes-count');
@@ -1510,13 +1557,21 @@ function refreshInfoPanels() {
         <div class="pending-dot" style="background:#D4A843"></div>
         <div><span class="pending-entry-loc" style="color:#9A6F00">${p.floor}</span>${p.task}</div>
       </div>`).join('');
-    } else if (!pending.length) {
+    }
+    if (outerPending.length) {
+      html += `<div style="margin:8px 18px 4px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px">🌿 Outer Areas Pending</div>`;
+      html += outerPending.map(p=>`<div class="pending-entry">
+        <div class="pending-dot" style="background:#2E7D32"></div>
+        <div>${p.task}</div>
+      </div>`).join('');
+    }
+    if (!pending.length && !extraPending.length && !outerPending.length) {
       html = '<div class="info-panel-empty">✅ All tasks completed!</div>';
     }
     pb.innerHTML = html;
   }
   if (nc) nc.textContent = notes.length;
-  if (pc) pc.textContent = pending.length + extraPending.length;
+  if (pc) pc.textContent = pending.length + extraPending.length + outerPending.length;
 }
 
 function switchFloor(fn) {
@@ -1530,6 +1585,7 @@ function switchFloor(fn) {
 function renderFloorContent() {
   const bk = currentBuilding;
   if (currentFloor === '_extra') { renderExtraSchedule(); return; }
+  if (currentFloor === '_outer') { renderOuterAreas(); return; }
 
   // Build the panel shell once (includes search toolbar)
   const BUILDINGS = getBuildings();
@@ -1752,7 +1808,6 @@ function renderExtraSchedule() {
     {key:'weekly',label:'Weekly Tasks',badgeClass:'badge-weekly',icon:'📅'},
     {key:'fifteen_days',label:'15-Day Tasks',badgeClass:'badge-15days',icon:'🗓'},
     {key:'monthly',label:'Monthly Tasks',badgeClass:'badge-monthly',icon:'📆'},
-    {key:'outer_areas',label:'Outer Areas',badgeClass:'badge-outer',icon:'🌿'},
   ];
   let html = '<div class="extra-grid">';
   for (const cat of cats) {
@@ -1777,6 +1832,31 @@ function renderExtraSchedule() {
   document.getElementById('floorContent').innerHTML = html;
 }
 
+function renderOuterAreas() {
+  const bk = currentBuilding;
+  const b = getBuildings()[bk];
+  const edit = canEdit();
+  const items = (b.extra && b.extra.outer_areas) || [];
+  if (!items.length) {
+    document.getElementById('floorContent').innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);">No outer area tasks defined for this building.</div>';
+    return;
+  }
+  const checked = getChecked(bk, '_extra_outer_areas', viewingDate);
+  const done = Object.values(checked).filter(Boolean).length;
+  let itHtml = '';
+  for (let i = 0; i < items.length; i++) {
+    const isChk = !!checked[i];
+    itHtml += `<div class="extra-item">
+      <div class="chkbox ${isChk?'chk':''} ${!edit?'disabled':''}" onclick="${edit?`toggleOuter(${i})`:''}"></div>
+      <div class="iname ${isChk?'chk':''}" style="font-size:13px">${items[i]}</div>
+    </div>`;
+  }
+  document.getElementById('floorContent').innerHTML = `<div class="extra-grid"><div class="extra-card" style="border-top:4px solid #2E7D32;max-width:600px;">
+    <div class="extra-card-hdr"><span style="font-size:20px">🌿</span><h3 style="color:#2E7D32">Outer Areas</h3><span class="extra-badge" style="background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7">${done}/${items.length}</span></div>
+    <div class="extra-items">${itHtml}</div>
+  </div></div>`;
+}
+
 // ── ACTIONS ───────────────────────────────────────────────────────────────────
 function toggleItem(idx) {
   if(!canEdit()){showToast('🔒 Editing disabled for this date');return;}
@@ -1795,6 +1875,15 @@ function toggleExtra(cat, idx) {
   checked[idx] = !checked[idx];
   setChecked(currentBuilding, key, checked, viewingDate);
   renderExtraSchedule();
+  updateSummaryBar();
+  refreshInfoPanels();
+}
+function toggleOuter(idx) {
+  if(!canEdit()){showToast('🔒 Editing disabled for this date');return;}
+  const checked = getChecked(currentBuilding, '_extra_outer_areas', viewingDate);
+  checked[idx] = !checked[idx];
+  setChecked(currentBuilding, '_extra_outer_areas', checked, viewingDate);
+  renderOuterAreas();
   updateSummaryBar();
   refreshInfoPanels();
 }
@@ -1849,6 +1938,7 @@ function handleSearch(val) { searchQuery=val; renderFloorItems(); }
 function markAllFloor() {
   if(!canEdit()){showToast('🔒 Editing disabled for this date');return;}
   if(currentFloor==='_extra'){showToast('Use individual checkboxes');return;}
+  if(currentFloor==='_outer'){showToast('Use individual checkboxes');return;}
   const BUILDINGS = getBuildings();
   const items = BUILDINGS[currentBuilding].floors[currentFloor]||[];
   const checked = {};
@@ -1863,8 +1953,11 @@ function resetFloor() {
   if(!canEdit()){showToast('🔒 Editing disabled for this date');return;}
   if(!confirm('Reset all checkboxes for this floor?')) return;
   if(currentFloor==='_extra'){
-    ['weekly','fifteen_days','monthly','outer_areas'].forEach(cat=>setChecked(currentBuilding,'_extra_'+cat,{},viewingDate));
+    ['weekly','fifteen_days','monthly'].forEach(cat=>setChecked(currentBuilding,'_extra_'+cat,{},viewingDate));
     renderExtraSchedule();
+  } else if(currentFloor==='_outer'){
+    setChecked(currentBuilding,'_extra_outer_areas',{},viewingDate);
+    renderOuterAreas();
   } else {
     setChecked(currentBuilding, currentFloor, {}, viewingDate);
     renderFloorContent();
@@ -1879,6 +1972,7 @@ function updateSummaryBar() {
   const b = BUILDINGS[bk];
   const p = getBuildingProgress(bk, viewingDate);
   const ep = getExtraProgress(bk, viewingDate);
+  const op = getOuterProgress(bk, viewingDate);
   const el = (id)=>document.getElementById(id);
   if(el('sb-prog')) el('sb-prog').style.width=p.pct+'%';
   if(el('sb-pct')) el('sb-pct').textContent=p.pct+'% Daily Tasks Complete';
@@ -1888,6 +1982,11 @@ function updateSummaryBar() {
   if(el('sb-ex-pend')){ el('sb-ex-pend').textContent=ep.total-ep.done; el('sb-ex-pend').style.color=(ep.total-ep.done)?'var(--orange)':'var(--green)'; }
   if(el('sb-ex-prog')) el('sb-ex-prog').style.width=ep.pct+'%';
   if(el('sb-ex-pct')) el('sb-ex-pct').textContent=ep.pct+'% Extra Complete';
+  if(el('sb-ex-stars')){ const tmp=document.createElement('div'); tmp.innerHTML=_taskStars(ep.pct); if(tmp.firstChild){el('sb-ex-stars').className=tmp.firstChild.className; el('sb-ex-stars').textContent=tmp.firstChild.textContent;} }
+  if(el('sb-oa-done')) el('sb-oa-done').textContent=op.done;
+  if(el('sb-oa-pend')){ el('sb-oa-pend').textContent=op.total-op.done; el('sb-oa-pend').style.color=(op.total-op.done)?'var(--orange)':'var(--green)'; }
+  if(el('sb-oa-prog')) el('sb-oa-prog').style.width=op.pct+'%';
+  if(el('sb-oa-pct')) el('sb-oa-pct').textContent=op.pct+'% Outer Complete';
   // update floor tab badges and staff names
   const floorNames = Object.keys(b.floors);
   document.querySelectorAll('.ftab:not(.extra-tab)').forEach((tab,idx)=>{
@@ -2309,7 +2408,7 @@ function getExtraPending(bk, date) {
   const BUILDINGS = getBuildings();
   const b = BUILDINGS[bk];
   const pending = [];
-  const extraLabels = {weekly:'Weekly',fifteen_days:'15-Day',monthly:'Monthly',outer_areas:'Outer Areas'};
+  const extraLabels = {weekly:'Weekly',fifteen_days:'15-Day',monthly:'Monthly'};
   for (const [cat, label] of Object.entries(extraLabels)) {
     const items = b.extra[cat]||[];
     const checked = getChecked(bk, '_extra_'+cat, date);
@@ -2318,6 +2417,12 @@ function getExtraPending(bk, date) {
     }
   }
   return pending;
+}
+function getOuterPending(bk, date) {
+  const b = getBuildings()[bk];
+  const items = (b.extra && b.extra.outer_areas) || [];
+  const checked = getChecked(bk, '_extra_outer_areas', date);
+  return items.map((t,i)=>({task: typeof t==='string'?t:t.name, done:!!checked[i]})).filter(t=>!t.done);
 }
 
 function notesHtml(notes, maxShow) {
