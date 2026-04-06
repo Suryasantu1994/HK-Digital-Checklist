@@ -1103,6 +1103,8 @@ async function doLogin() {
 
   currentUser = { ...user, id };
   viewingDate = todayKey();
+  // Persist session so page refresh doesn't force re-login
+  localStorage.setItem('gitam_session', JSON.stringify({ id, ts: Date.now() }));
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('mainApp').style.display = 'flex';
   document.getElementById('userLabel').textContent = user.label;
@@ -1112,6 +1114,7 @@ async function doLogin() {
 
 function doLogout() {
   currentUser = null;
+  localStorage.removeItem('gitam_session');
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('mainApp').style.display = 'none';
   document.getElementById('loginId').value = '';
@@ -3813,6 +3816,38 @@ function exportFeedbackCsv() {
   showToast('📥 CSV exported!');
 }
 
+// ── SESSION RESTORE: attempt to resume a previous session on page load/refresh ─
+async function tryRestoreSession() {
+  try {
+    const raw = localStorage.getItem('gitam_session');
+    if (!raw) return false;
+    const sess = JSON.parse(raw);
+    if (!sess || !sess.id) return false;
+
+    // Optional: expire session after 12 hours (43200000 ms)
+    const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+    if (sess.ts && (Date.now() - sess.ts) > SESSION_TTL_MS) {
+      localStorage.removeItem('gitam_session');
+      return false;
+    }
+
+    const user = USERS[sess.id];
+    if (!user) { localStorage.removeItem('gitam_session'); return false; }
+
+    currentUser = { ...user, id: sess.id };
+    viewingDate = todayKey();
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'flex';
+    document.getElementById('userLabel').textContent = user.label;
+    await buildNav();
+    showDashboard();
+    return true;
+  } catch(e) {
+    localStorage.removeItem('gitam_session');
+    return false;
+  }
+}
+
 // ── STARTUP: check if this is a feedback URL ──────────────────────────────────
 (function() {
   window.addEventListener('DOMContentLoaded', async () => {
@@ -3826,6 +3861,14 @@ function exportFeedbackCsv() {
     try { await Promise.race([loadCustomTasksFromFirestore(), new Promise(r=>setTimeout(r,4000))]); } catch(e){}
     try { await Promise.race([loadFeedbackFromFirestore(),    new Promise(r=>setTimeout(r,4000))]); } catch(e){}
     supLoadData();
+
+    // Restore previous session if available (prevents redirect to login on refresh)
+    const restored = await tryRestoreSession();
+    if (!restored) {
+      // No valid session — ensure login page is visible
+      document.getElementById('loginPage').style.display = 'flex';
+      document.getElementById('mainApp').style.display = 'none';
+    }
   });
 })();
 
