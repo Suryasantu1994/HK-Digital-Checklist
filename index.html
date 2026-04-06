@@ -474,6 +474,106 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .staff-modal .modal-loc{font-size:12px;color:var(--text-muted);margin-bottom:16px;}
 .staff-modal-close{position:absolute;top:14px;right:18px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);}
 .staff-modal-close:hover{color:var(--text);}
+
+/* ── SUPERVISOR ALLOCATION ── */
+.sup-page{padding:28px 32px;max-width:1100px;margin:0 auto;}
+.sup-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.sup-toolbar-title{font-family:"Playfair Display",serif;font-size:22px;font-weight:700;color:var(--teal-dark);}
+.sup-table-wrap{background:var(--white);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--border);}
+.sup-table{width:100%;border-collapse:collapse;}
+.sup-table thead tr{background:linear-gradient(135deg,var(--teal-dark),var(--teal));}
+.sup-table thead th{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:white;padding:13px 16px;text-align:left;}
+.sup-table thead th:last-child{text-align:center;}
+.sup-table tbody tr{background:var(--white);border-bottom:1px solid var(--border);transition:background .15s;}
+.sup-table tbody tr:nth-child(even){background:var(--bg);}
+.sup-table tbody tr:hover{background:var(--teal-pale);}
+.sup-table tbody tr.sup-on-leave{background:#FFFBF0!important;}
+.sup-table tbody tr.sup-on-leave:hover{background:#FFF8E1!important;}
+.sup-table tbody td{padding:11px 16px;font-size:14px;color:var(--text);vertical-align:middle;}
+.sup-table tbody td:last-child{text-align:center;white-space:nowrap;}
+.sup-loc-tags{display:flex;flex-wrap:wrap;gap:5px;}
+.sup-loc-tag{display:inline-flex;align-items:center;background:var(--teal-pale);color:var(--teal-dark);border:1px solid var(--teal-mid);border-radius:20px;font-size:12px;font-weight:600;padding:3px 10px;white-space:nowrap;}
+.sup-loc-tag.primary{background:linear-gradient(135deg,var(--teal-dark),var(--teal));color:white;border-color:transparent;}
+.sup-loc-tag.unassigned{background:#FFF3CD;color:#856404;border:1.5px dashed #FFD970;}
+.sup-time-badge{display:inline-block;background:var(--teal-pale);color:var(--teal-dark);font-size:12px;font-weight:600;border-radius:20px;padding:3px 12px;border:1px solid var(--teal-mid);}
+.sup-off-badge{display:inline-flex;align-items:center;background:#FFF3CD;color:#856404;border:1px solid #FFD970;border-radius:20px;font-size:11px;font-weight:700;padding:2px 9px;white-space:nowrap;margin:1px;}
+.sup-leave-strip{display:inline-flex;align-items:center;gap:4px;background:#FFF3CD;color:#856404;border:1px solid #FFD970;border-radius:6px;font-size:11px;font-weight:700;padding:2px 8px;margin-top:3px;}
+.sup-onleave-name{color:var(--text-muted);font-weight:500;font-style:italic;}
+.sup-coverage{margin-top:16px;border-radius:14px;overflow:hidden;border:1.5px solid #FFD970;box-shadow:0 4px 18px rgba(212,168,67,.15);display:none;}
+.sup-coverage.visible{display:block;}
+.sup-coverage-hdr{background:linear-gradient(135deg,#B7860B,#D4A843);padding:12px 20px;display:flex;align-items:center;gap:10px;font-family:"Playfair Display",serif;font-size:15px;font-weight:700;color:white;}
+.sup-coverage-hdr span{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:rgba(255,255,255,.8);margin-left:auto;}
+.sup-coverage-body{background:#FFFBF0;padding:14px 20px;}
+.sup-coverage-row{display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:1px dashed #FFD970;}
+.sup-coverage-row:last-child{border-bottom:none;padding-bottom:0;}
+.sup-coverage-name{min-width:130px;font-weight:600;font-size:13px;color:#856404;}
+.sup-coverage-name small{font-weight:400;font-size:11px;color:#B7860B;display:block;margin-top:2px;}
+/* Supervisor name badge shown inside building header & dashboard cards */
+.bld-sup-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,107,107,.08);border:1px solid var(--teal-mid);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;color:var(--teal-dark);margin-top:4px;flex-wrap:wrap;}
+.bld-sup-badge.off{background:#FFF3CD;border-color:#FFD970;color:#856404;}
+.bld-sup-time{font-weight:400;color:var(--text-muted);font-size:11px;}
+.sup-add-bar{margin-top:18px;background:var(--white);border-radius:16px;box-shadow:var(--shadow);border:2px dashed var(--teal);overflow:hidden;display:none;}
+.sup-add-bar.open{display:block;}
+.sup-add-bar-hdr{background:linear-gradient(135deg,var(--teal-dark),var(--teal));padding:12px 18px;font-size:14px;font-weight:600;color:white;}
+.sup-add-bar-body{padding:18px;background:var(--bg);}
+.sup-add-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.sup-field{margin-bottom:14px;}
+.sup-field:last-child{margin-bottom:0;}
+.sup-field label{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--teal-dark);margin-bottom:6px;}
+.sup-field input{width:100%;padding:10px 13px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--white);outline:none;transition:border-color .2s,box-shadow .2s;}
+.sup-field input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,107,107,.12);}
+.sup-bld-picker{border:2px solid var(--border);border-radius:10px;background:var(--white);overflow:hidden;transition:border-color .2s,box-shadow .2s;}
+.sup-bld-picker:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,107,107,.12);}
+.sup-bld-search{width:100%;padding:9px 14px;border:none;border-bottom:1px solid var(--border);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--bg);outline:none;}
+.sup-bld-list{max-height:160px;overflow-y:auto;}
+.sup-bld-option{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;transition:background .12s;border-bottom:1px solid var(--bg);user-select:none;}
+.sup-bld-option:last-child{border-bottom:none;}
+.sup-bld-option:hover{background:var(--teal-pale);}
+.sup-bld-option.selected{background:rgba(0,107,107,.06);}
+.sup-bld-option input[type=checkbox]{accent-color:var(--teal);width:16px;height:16px;cursor:pointer;flex-shrink:0;}
+.sup-bld-option-name{font-size:13px;font-weight:500;color:var(--text);flex:1;}
+.sup-bld-option.selected .sup-bld-option-name{color:var(--teal-dark);font-weight:600;}
+.sup-primary-badge{font-size:10px;color:var(--teal-dark);font-weight:700;background:var(--teal-mid);border-radius:10px;padding:1px 7px;white-space:nowrap;}
+.sup-sel-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;border-top:1px solid var(--border);background:var(--bg);min-height:44px;align-items:center;}
+.sup-sel-empty{font-size:12px;color:var(--text-muted);font-style:italic;}
+.sup-sel-tag{display:inline-flex;align-items:center;gap:5px;background:var(--teal-dark);color:white;border-radius:20px;font-size:12px;font-weight:600;padding:3px 8px 3px 10px;}
+.sup-sel-tag.primary{background:linear-gradient(135deg,var(--teal-dark),var(--teal-light));}
+.sup-sel-remove{background:none;border:none;color:rgba(255,255,255,.65);cursor:pointer;font-size:16px;line-height:1;padding:0 0 0 2px;display:flex;align-items:center;}
+.sup-sel-remove:hover{color:white;}
+.sup-weekoff-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.sup-day-btn{width:38px;height:38px;border-radius:50%;border:2px solid var(--border);background:var(--white);color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;user-select:none;}
+.sup-day-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-pale);}
+.sup-day-btn.active{background:var(--teal-dark);color:white;border-color:var(--teal-dark);}
+.sup-day-btn.today-mark{box-shadow:0 0 0 3px rgba(212,168,67,.5);}
+.sup-add-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;}
+.sup-bottom-bar{margin-top:16px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
+.sup-modal-ov{display:none;position:fixed;inset:0;background:rgba(0,60,60,.45);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+.sup-modal-ov.active{display:flex;}
+.sup-modal{background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.22);width:100%;max-width:500px;overflow:hidden;animation:slideUp .22s ease;}
+.sup-modal-hdr{background:linear-gradient(135deg,var(--teal-dark),var(--teal));padding:18px 24px;display:flex;align-items:center;justify-content:space-between;}
+.sup-modal-hdr h2{font-family:"Playfair Display",serif;font-size:18px;font-weight:700;color:white;}
+.sup-modal-close-btn{background:none;border:none;color:rgba(255,255,255,.75);font-size:22px;cursor:pointer;}
+.sup-modal-close-btn:hover{color:white;}
+.sup-modal-body{padding:24px;background:var(--bg);max-height:72vh;overflow-y:auto;}
+.sup-modal-footer{padding:16px 24px;background:var(--teal-pale);display:flex;align-items:center;justify-content:flex-end;gap:10px;border-top:1px solid var(--border);}
+.sup-share-ov{display:none;position:fixed;inset:0;background:rgba(0,30,25,.52);z-index:500;backdrop-filter:blur(3px);align-items:center;justify-content:center;}
+.sup-share-ov.open{display:flex;}
+.sup-share-modal{background:var(--white);border-radius:16px;width:100%;max-width:420px;margin:16px;box-shadow:0 20px 60px rgba(0,60,50,.25);overflow:hidden;}
+.sup-share-hdr{background:linear-gradient(135deg,var(--teal-dark),var(--teal));padding:17px 22px;display:flex;align-items:flex-start;justify-content:space-between;}
+.sup-share-hdr h3{font-family:'Playfair Display',serif;font-size:17px;color:#fff;font-weight:700;}
+.sup-share-hdr small{font-size:11px;color:rgba(255,255,255,.65);display:block;margin-top:3px;}
+.sup-share-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:12px;}
+.sup-share-close:hover{background:rgba(255,255,255,.3);}
+.sup-share-body{padding:20px;}
+.sup-share-preview{width:100%;border-radius:10px;border:1px solid var(--border);display:block;margin-bottom:16px;}
+.sup-share-actions{display:flex;flex-direction:column;gap:10px;}
+.sup-wa-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;border-radius:10px;background:#25D366;color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
+.sup-wa-btn:hover{background:#1da851;}
+.sup-dl-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;border-radius:10px;background:var(--bg);color:var(--teal-dark);border:1.5px solid var(--border);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+.sup-dl-btn:hover{background:var(--teal-dark);color:#fff;}
+.sup-spinner{display:flex;flex-direction:column;align-items:center;gap:12px;padding:36px;color:var(--text-muted);font-size:13px;}
+.sup-spinner-ring{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;}
+@media(max-width:640px){.sup-page{padding:14px;}.sup-add-grid{grid-template-columns:1fr;}.sup-table thead th:nth-child(4),.sup-table tbody td:nth-child(4){display:none;}}
 </style>
 </head>
 <body>
@@ -1177,6 +1277,7 @@ async function buildNav() {
   for (const bk of currentUser.access) {
     html += `<button class="nav-tab" id="tab-${encodeKey(bk)}" onclick="showBuilding('${esc(bk)}')">${bk}</button>`;
   }
+  html += `<button class="nav-tab" id="tab-supervisors" onclick="showSupervisorAllocation()">👷 Supervisors</button>`;
   if (currentUser.role === 'admin') {
     const pending = await getPendingResets();
     const badge = pending.length > 0 ? ` <span style="background:#E53E3E;color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;margin-left:4px;">${pending.length}</span>` : '';
@@ -1317,6 +1418,14 @@ function showDashboard_render() {
     cards += `<div class="summary-card" onclick="showBuilding('${esc(bk)}')">
       <div class="card-building">Building</div>
       <div class="card-name">${b.name}</div>
+      ${(function(){
+        const sups = getSupForBuilding(bk);
+        if (!sups.length) return '';
+        return '<div style="margin-bottom:6px;">' + sups.map(s => `<span class="bld-sup-badge${s.isOff?' off':''}">
+          👷 ${s.supervisor}${s.isOff?' <span style="font-size:10px;background:#FFD970;color:#856404;border-radius:4px;padding:1px 5px;margin-left:2px;">🏖 Off</span>':''}
+          <span class="bld-sup-time">${s.isOff?'':'· '+supFmt12(s.time)}</span>
+        </span>`).join('') + '</div>';
+      })()}
       <div style="font-size:10px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">📋 Daily Tasks</div>
       <div class="card-stats">
         <div class="stat"><div class="stat-num">${Object.keys(b.floors).length}</div><div class="stat-label">Floors</div></div>
@@ -1438,6 +1547,15 @@ function renderBuildingView() {
 
   const ep = getExtraProgress(bk, viewingDate);
   const op = getOuterProgress(bk, viewingDate);
+  // Build supervisor badge for summary bar
+  const supsBld = getSupForBuilding(bk);
+  const supSbHtml = supsBld.length ? `<div class="sb-div"></div>
+    <div style="display:flex;flex-direction:column;gap:4px;justify-content:center;">
+      ${supsBld.map(s => `<span class="bld-sup-badge${s.isOff?' off':''}" style="font-size:11px;">
+        👷 ${s.supervisor}${s.isOff?' <span style="font-size:10px;background:#FFD970;color:#856404;border-radius:4px;padding:1px 4px;margin-left:2px;">🏖 Off</span>':''}
+        <span class="bld-sup-time">${s.isOff?'':'· '+supFmt12(s.time)}</span>
+      </span>`).join('')}
+    </div>` : '';
   // Summary bar
   const sb = `<div class="summary-bar" id="summaryBar">
     <div class="sb-stat"><div class="sb-num">${floorNames.length}</div><div class="sb-lbl">Floors</div></div>
@@ -1445,6 +1563,7 @@ function renderBuildingView() {
     <div class="sb-stat"><div class="sb-num" id="sb-done">${p.done}</div><div class="sb-lbl">Done Today</div></div>
     <div class="sb-div"></div>
     <div class="sb-stat"><div class="sb-num" id="sb-pend">${p.total-p.done}</div><div class="sb-lbl">Pending</div></div>
+    ${supSbHtml}
     <div class="sb-div"></div>
     <div class="sb-prog">
       <div style="display:flex;align-items:center;gap:8px;">
@@ -1502,6 +1621,14 @@ function renderBuildingView() {
       <div class="cl-header-left">
         <h2>${b.name}</h2>
         ${_taskStars(p.pct)}
+        ${(function(){
+          const sups = getSupForBuilding(bk);
+          if (!sups.length) return '';
+          return sups.map(s => `<span class="bld-sup-badge${s.isOff?' off':''}">
+            👷 ${s.supervisor}${s.isOff?' <span style="font-size:10px;background:#FFD970;color:#856404;border-radius:4px;padding:1px 5px;margin-left:2px;">🏖 Off</span>':''}
+            <span class="bld-sup-time">${s.isOff?'':'· '+supFmt12(s.time)}</span>
+          </span>`).join('');
+        })()}
         <p>Daily housekeeping checklist — ${formatDate(viewingDate)}</p>
       </div>
       <div class="cl-actions no-print">
@@ -2862,6 +2989,582 @@ function showFeedbackAdmin() {
   refreshFeedbackList();
 }
 
+// ── SUPERVISOR ALLOCATION ─────────────────────────────────────────────────────
+const SUP_LS_KEY = 'gitam_supervisors_v1';
+const SUP_FS_DOC = 'supervisor_allocation';
+const SUP_DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+// Supervisor data — loaded from Firestore/localStorage
+let supData = [
+  { locations: ['SHIVAJI BHAVAN'],                                   supervisor: 'Muniyappa',  time: '07:00', weekOff: ['Sun'] },
+  { locations: ['VISVESVARAYA BHAVAN'],                              supervisor: 'Prema',      time: '07:00', weekOff: ['Sun'] },
+  { locations: ['VINAY SADAN', 'KOKILA SADAN', 'STAFF QUARTERS'],   supervisor: 'Satish',     time: '09:00', weekOff: ['Sun'] },
+  { locations: ['SOUTH GIRLS HOSTEL'],                               supervisor: 'Lakshmi',    time: '09:00', weekOff: ['Sun'] },
+  { locations: ['NORTH BOYS HOSTEL'],                                supervisor: 'Vinod',      time: '08:00', weekOff: ['Sun'] },
+  { locations: ['SECOND SHIFT'],                                     supervisor: 'Rangaswamy', time: '13:00', weekOff: ['Sun'] },
+];
+let supDeleteIdx   = null;
+let supShareImgUrl = null;
+let supPickerState = { add: [], edit: [] };
+let supWeekOff     = { add: [], edit: [] };
+let supViewDate    = new Date();
+
+// Load saved data from localStorage then Firestore
+function supLoadData() {
+  try {
+    const saved = localStorage.getItem(SUP_LS_KEY);
+    if (saved) supData = JSON.parse(saved);
+  } catch(e) {}
+  const db = _getDb();
+  if (db) {
+    db.collection('supervisor').doc(SUP_FS_DOC).get().then(snap => {
+      if (snap.exists && snap.data().rows) {
+        supData = snap.data().rows;
+        localStorage.setItem(SUP_LS_KEY, JSON.stringify(supData));
+        if (currentView === 'supervisors') supRenderTable();
+      }
+    }).catch(() => {});
+  }
+}
+
+function supSaveData() {
+  localStorage.setItem(SUP_LS_KEY, JSON.stringify(supData));
+  const db = _getDb();
+  if (db) {
+    db.collection('supervisor').doc(SUP_FS_DOC).set({ rows: supData })
+      .catch(e => console.warn('Supervisor save failed', e));
+  }
+}
+
+function supGetBuildingList() {
+  const keys = Object.keys(getBuildings());
+  // Map checklist building keys to display names + add extra locations
+  const names = keys.map(k => getBuildings()[k].name);
+  const extras = ['KOKILA SADAN','SECOND SHIFT'];
+  extras.forEach(e => { if (!names.includes(e)) names.push(e); });
+  return names;
+}
+
+// Returns assigned supervisors for a given building key (for today's date).
+// Respects week-off — returns empty array if all supervisors for that building are off.
+function getSupForBuilding(bk) {
+  const b = getBuildings()[bk];
+  if (!b) return [];
+  const bName = b.name.toUpperCase();
+  const todayDay = supTodayDay();
+  const result = [];
+  supData.forEach(row => {
+    const locs = (row.locations || []).map(l => l.toUpperCase());
+    if (locs.includes(bName)) {
+      const isOff = (row.weekOff || []).includes(todayDay);
+      result.push({ supervisor: row.supervisor, time: row.time, isOff });
+    }
+  });
+  return result;
+}
+
+function supTodayDay(d) { return SUP_DAYS[(d || supViewDate).getDay()]; }
+
+function supFmt12(timeStr) {
+  if (!timeStr) return '—';
+  const [h, m] = timeStr.split(':');
+  const hr = parseInt(h), ampm = hr < 12 ? 'AM' : 'PM';
+  const h12 = hr === 0 ? 12 : hr > 12 ? hr - 12 : hr;
+  return `${String(h12).padStart(2,'0')}:${m} ${ampm}`;
+}
+
+function showSupervisorAllocation() {
+  currentView = 'supervisors';
+  setActiveTab('supervisors');
+  supLoadData();
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  const dateStr = supViewDate.toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' });
+
+  document.getElementById('mainContent').innerHTML = `
+  <div class="sup-page">
+    <div class="sup-toolbar">
+      <div class="sup-toolbar-title">👷 Supervisor Allocation</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <input type="date" id="supDatePicker" value="${supViewDate.toISOString().slice(0,10)}"
+          style="padding:7px 12px;border:2px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--white);cursor:pointer;outline:none;"
+          onchange="supOnDateChange(this.value)">
+        ${isAdmin ? `<button class="btn btn-s" onclick="supOpenAdd()">＋ Add Entry</button>` : ''}
+        <button class="btn btn-s" onclick="supOpenShare()" style="border-color:#25D366;color:#25D366;">📲 Share</button>
+        <button class="btn btn-s" onclick="supExportCSV()">⬇ CSV</button>
+      </div>
+    </div>
+
+    <div id="supCoverage" class="sup-coverage">
+      <div class="sup-coverage-hdr">⚠️ Unassigned Buildings Today
+        <span id="supCoverageCount"></span>
+      </div>
+      <div class="sup-coverage-body" id="supCoverageBody"></div>
+    </div>
+
+    <div class="sup-table-wrap" style="margin-top:16px;">
+      <table class="sup-table">
+        <thead><tr>
+          <th style="width:36px;">#</th>
+          <th>Buildings / Locations</th>
+          <th>Supervisor</th>
+          <th>Time</th>
+          <th>Week Off</th>
+          ${isAdmin ? '<th>Actions</th>' : ''}
+        </tr></thead>
+        <tbody id="supTableBody"></tbody>
+      </table>
+    </div>
+
+    ${isAdmin ? `
+    <div class="sup-add-bar" id="supAddBar">
+      <div class="sup-add-bar-hdr">＋ New Supervisor Entry</div>
+      <div class="sup-add-bar-body">
+        <div class="sup-add-grid">
+          <div class="sup-field"><label>Supervisor Name</label><input type="text" id="supNewName" placeholder="Full name…"></div>
+          <div class="sup-field"><label>Reporting Time</label><input type="time" id="supNewTime" value="09:00"></div>
+        </div>
+        <div class="sup-field">
+          <label>Week Off Days <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">(click to toggle)</span></label>
+          <div class="sup-weekoff-wrap" id="supAddWODays"></div>
+        </div>
+        <div class="sup-field" style="margin-bottom:0;">
+          <label>Buildings / Locations <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">(first = primary)</span></label>
+          <div class="sup-bld-picker" id="supAddPicker">
+            <input class="sup-bld-search" type="text" placeholder="🔍 Search buildings…" oninput="supFilterBld('add',this.value)">
+            <div class="sup-bld-list" id="supAddBldList"></div>
+            <div class="sup-sel-wrap" id="supAddSelTags"></div>
+          </div>
+        </div>
+        <div class="sup-add-actions">
+          <button class="btn btn-s" onclick="supCloseAdd()">Cancel</button>
+          <button class="btn btn-p" onclick="supAddRow()">＋ Add Entry</button>
+        </div>
+      </div>
+    </div>` : ''}
+
+    <div class="sup-bottom-bar">
+      <button class="btn btn-s" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+
+  <!-- Edit modal -->
+  <div class="sup-modal-ov" id="supEditModal">
+    <div class="sup-modal">
+      <div class="sup-modal-hdr">
+        <h2>Edit Allocation</h2>
+        <button class="sup-modal-close-btn" onclick="supCloseEdit()">✕</button>
+      </div>
+      <div class="sup-modal-body">
+        <input type="hidden" id="supEditIdx">
+        <div class="sup-field"><label>Supervisor Name</label><input type="text" id="supEditName"></div>
+        <div class="sup-field"><label>Reporting Time</label><input type="time" id="supEditTime"></div>
+        <div class="sup-field">
+          <label>Week Off Days</label>
+          <div class="sup-weekoff-wrap" id="supEditWODays"></div>
+        </div>
+        <div class="sup-field" style="margin-bottom:0;">
+          <label>Buildings / Locations <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">(first = primary)</span></label>
+          <div class="sup-bld-picker" id="supEditPicker">
+            <input class="sup-bld-search" type="text" placeholder="🔍 Search buildings…" oninput="supFilterBld('edit',this.value)">
+            <div class="sup-bld-list" id="supEditBldList"></div>
+            <div class="sup-sel-wrap" id="supEditSelTags"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sup-modal-footer">
+        <button class="btn btn-s" onclick="supCloseEdit()">Cancel</button>
+        <button class="btn btn-p" onclick="supSaveEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete confirm -->
+  <div class="sup-modal-ov" id="supConfirmOv">
+    <div class="sup-modal" style="max-width:360px;text-align:center;padding:0;">
+      <div class="sup-modal-hdr" style="background:linear-gradient(135deg,#8B0000,#C0392B);">
+        <h2>Delete Entry?</h2>
+        <button class="sup-modal-close-btn" onclick="supCloseConfirm()">✕</button>
+      </div>
+      <div style="padding:28px 24px;">
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:22px;line-height:1.5;">This will permanently remove the allocation record.</p>
+        <div style="display:flex;justify-content:center;gap:12px;">
+          <button class="btn btn-s" onclick="supCloseConfirm()">Cancel</button>
+          <button class="btn btn-danger" onclick="supConfirmDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share modal -->
+  <div class="sup-share-ov" id="supShareOv">
+    <div class="sup-share-modal">
+      <div class="sup-share-hdr">
+        <div><h3>Share Allocation</h3><small id="supShareLabel"></small></div>
+        <button class="sup-share-close" onclick="supCloseShare()">✕</button>
+      </div>
+      <div class="sup-share-body">
+        <div class="sup-spinner" id="supShareSpinner"><div class="sup-spinner-ring"></div><span>Generating image…</span></div>
+        <div id="supShareContent" style="display:none;">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;">Preview</div>
+          <img id="supShareImg" class="sup-share-preview" src="" alt="Preview"/>
+          <div class="sup-share-actions">
+            <button class="sup-wa-btn" onclick="supShareWhatsApp()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Share via WhatsApp
+            </button>
+            <button class="sup-dl-btn" onclick="supDownloadImg()">⬇ Download Image</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  supRenderTable();
+}
+
+function supOnDateChange(val) {
+  if (!val) return;
+  const [y, m, d] = val.split('-').map(Number);
+  supViewDate = new Date(y, m - 1, d);
+  supRenderTable();
+}
+
+function supRenderTable() {
+  const tbody = document.getElementById('supTableBody');
+  if (!tbody) return;
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  const todayDay = supTodayDay();
+  const offRows = [];
+  tbody.innerHTML = '';
+
+  supData.forEach((row, i) => {
+    const locs = row.locations || (row.location ? [row.location] : ['—']);
+    const offs  = row.weekOff || [];
+    const isOff = offs.includes(todayDay);
+    if (isOff) offRows.push(row);
+
+    const tagsHtml = locs.map((loc, idx) =>
+      isOff
+        ? `<span class="sup-loc-tag unassigned">⚠ ${loc}</span>`
+        : `<span class="sup-loc-tag${idx === 0 ? ' primary' : ''}">${loc}</span>`
+    ).join('');
+
+    const weekOffHtml = offs.length
+      ? offs.map(d => `<span class="sup-off-badge">🏖 ${d}</span>`).join(' ')
+      : '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">—</span>';
+
+    const supHtml = isOff
+      ? `<span class="sup-onleave-name">${row.supervisor}</span><div><span class="sup-leave-strip">🏖 Week Off</span></div>`
+      : `<span style="font-weight:600;">${row.supervisor}</span>`;
+
+    const tr = document.createElement('tr');
+    if (isOff) tr.classList.add('sup-on-leave');
+    tr.innerHTML = `
+      <td style="color:var(--text-muted);font-size:12px;font-weight:600;">${i + 1}</td>
+      <td><div class="sup-loc-tags">${tagsHtml}</div></td>
+      <td>${supHtml}</td>
+      <td><span class="sup-time-badge">${isOff ? '—' : supFmt12(row.time)}</span></td>
+      <td>${weekOffHtml}</td>
+      ${isAdmin ? `<td>
+        <button class="btn btn-p btn-sm" onclick="supOpenEdit(${i})" style="margin-right:4px">✏ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="supAskDelete(${i})">✕</button>
+      </td>` : ''}`;
+    tbody.appendChild(tr);
+  });
+
+  supRenderCoverage(offRows);
+}
+
+function supRenderCoverage(offRows) {
+  const panel = document.getElementById('supCoverage');
+  const body  = document.getElementById('supCoverageBody');
+  const count = document.getElementById('supCoverageCount');
+  if (!panel) return;
+  if (!offRows.length) { panel.classList.remove('visible'); return; }
+  const total = offRows.reduce((n, r) => n + (r.locations || []).length, 0);
+  count.textContent = `${offRows.length} supervisor${offRows.length > 1 ? 's' : ''} off · ${total} building${total > 1 ? 's' : ''} unassigned`;
+  body.innerHTML = offRows.map(row => {
+    const tags = (row.locations || []).map(loc =>
+      `<span class="sup-loc-tag unassigned">⚠ ${loc}</span>`).join('');
+    return `<div class="sup-coverage-row">
+      <div class="sup-coverage-name">${row.supervisor}<small>🏖 Week Off</small></div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">${tags}</div>
+    </div>`;
+  }).join('');
+  panel.classList.add('visible');
+}
+
+// ── Building picker helpers ───────────────────────────────────────────────────
+function supRenderBldOptions(ctx, filter) {
+  const q = (filter || '').toLowerCase();
+  const list = document.getElementById(`sup${ctx === 'add' ? 'Add' : 'Edit'}BldList`);
+  if (!list) return;
+  const all = supGetBuildingList().filter(b => b.toLowerCase().includes(q));
+  if (!all.length) { list.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:var(--text-muted);font-style:italic;">No buildings found</div>'; return; }
+  list.innerHTML = all.map(b => {
+    const sel = supPickerState[ctx].includes(b);
+    const isPrimary = sel && supPickerState[ctx][0] === b;
+    const safeB = b.replace(/'/g, "\\'");
+    return `<label class="sup-bld-option${sel ? ' selected' : ''}">
+      <input type="checkbox" ${sel ? 'checked' : ''} onchange="supToggleBld('${ctx}','${safeB}',this.checked)">
+      <span class="sup-bld-option-name">${b}</span>
+      ${isPrimary ? '<span class="sup-primary-badge">★ PRIMARY</span>' : ''}
+    </label>`;
+  }).join('');
+}
+
+function supRenderSelTags(ctx) {
+  const wrap = document.getElementById(`sup${ctx === 'add' ? 'Add' : 'Edit'}SelTags`);
+  if (!wrap) return;
+  if (!supPickerState[ctx].length) { wrap.innerHTML = '<span class="sup-sel-empty">No buildings selected yet</span>'; return; }
+  wrap.innerHTML = supPickerState[ctx].map((b, i) => {
+    const safeB = b.replace(/'/g, "\\'");
+    return `<span class="sup-sel-tag${i === 0 ? ' primary' : ''}">
+      ${i === 0 ? '★ ' : ''}${b}
+      <button class="sup-sel-remove" onclick="supRemoveBld('${ctx}','${safeB}')">×</button>
+    </span>`;
+  }).join('');
+}
+
+function supToggleBld(ctx, b, checked) {
+  if (checked) { if (!supPickerState[ctx].includes(b)) supPickerState[ctx].push(b); }
+  else { supPickerState[ctx] = supPickerState[ctx].filter(x => x !== b); }
+  const searchEl = document.querySelector(`#sup${ctx === 'add' ? 'Add' : 'Edit'}Picker .sup-bld-search`);
+  supRenderBldOptions(ctx, searchEl ? searchEl.value : '');
+  supRenderSelTags(ctx);
+}
+
+function supRemoveBld(ctx, b) {
+  supPickerState[ctx] = supPickerState[ctx].filter(x => x !== b);
+  const searchEl = document.querySelector(`#sup${ctx === 'add' ? 'Add' : 'Edit'}Picker .sup-bld-search`);
+  supRenderBldOptions(ctx, searchEl ? searchEl.value : '');
+  supRenderSelTags(ctx);
+}
+
+function supFilterBld(ctx, val) { supRenderBldOptions(ctx, val); }
+
+function supInitPicker(ctx, preselected) {
+  supPickerState[ctx] = [...(preselected || [])];
+  supRenderBldOptions(ctx, '');
+  supRenderSelTags(ctx);
+}
+
+// ── Week Off picker ───────────────────────────────────────────────────────────
+function supRenderWO(ctx, selected) {
+  supWeekOff[ctx] = [...(selected || [])];
+  const el = document.getElementById(`sup${ctx === 'add' ? 'Add' : 'Edit'}WODays`);
+  if (!el) return;
+  const todayDay = supTodayDay();
+  el.innerHTML = SUP_DAYS.map(d => {
+    const isActive = supWeekOff[ctx].includes(d);
+    const isToday  = d === todayDay;
+    return `<button type="button"
+      class="sup-day-btn${isActive ? ' active' : ''}${isToday ? ' today-mark' : ''}"
+      onclick="supToggleDay('${ctx}','${d}')"
+      title="${d}${isToday ? ' (Today)' : ''}">${d}</button>`;
+  }).join('');
+}
+
+function supToggleDay(ctx, day) {
+  if (supWeekOff[ctx].includes(day)) supWeekOff[ctx] = supWeekOff[ctx].filter(d => d !== day);
+  else supWeekOff[ctx].push(day);
+  supRenderWO(ctx, supWeekOff[ctx]);
+}
+
+// ── Add ───────────────────────────────────────────────────────────────────────
+function supOpenAdd() {
+  supInitPicker('add', []);
+  supRenderWO('add', []);
+  const bar = document.getElementById('supAddBar');
+  if (bar) { bar.classList.add('open'); setTimeout(() => document.getElementById('supNewName').focus(), 50); }
+}
+
+function supCloseAdd() {
+  const bar = document.getElementById('supAddBar');
+  if (bar) bar.classList.remove('open');
+  const n = document.getElementById('supNewName'); if (n) n.value = '';
+  const t = document.getElementById('supNewTime'); if (t) t.value = '09:00';
+  supPickerState.add = []; supWeekOff.add = [];
+}
+
+function supAddRow() {
+  const name = (document.getElementById('supNewName').value || '').trim();
+  const time = document.getElementById('supNewTime').value;
+  const locs = [...supPickerState.add];
+  const offs = [...supWeekOff.add];
+  if (!name) { showToast('Please enter a supervisor name.'); return; }
+  if (!locs.length) { showToast('Please select at least one building.'); return; }
+  if (!time) { showToast('Please set a reporting time.'); return; }
+  supData.push({ locations: locs, supervisor: name, time, weekOff: offs });
+  supSaveData();
+  supCloseAdd();
+  supRenderTable();
+  showToast('✅ Entry added!');
+}
+
+// ── Edit ──────────────────────────────────────────────────────────────────────
+function supOpenEdit(idx) {
+  const row = supData[idx];
+  document.getElementById('supEditIdx').value = idx;
+  document.getElementById('supEditName').value = row.supervisor;
+  document.getElementById('supEditTime').value = row.time;
+  supInitPicker('edit', row.locations || []);
+  supRenderWO('edit', row.weekOff || []);
+  document.getElementById('supEditModal').classList.add('active');
+}
+
+function supCloseEdit() { document.getElementById('supEditModal').classList.remove('active'); }
+
+function supSaveEdit() {
+  const idx  = parseInt(document.getElementById('supEditIdx').value);
+  const name = (document.getElementById('supEditName').value || '').trim();
+  const time = document.getElementById('supEditTime').value;
+  const locs = [...supPickerState.edit];
+  const offs = [...supWeekOff.edit];
+  if (!name) { showToast('Please enter a supervisor name.'); return; }
+  if (!locs.length) { showToast('Please select at least one building.'); return; }
+  supData[idx] = { locations: locs, supervisor: name, time, weekOff: offs };
+  supSaveData();
+  supCloseEdit();
+  supRenderTable();
+  showToast('✅ Entry updated!');
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+function supAskDelete(idx) { supDeleteIdx = idx; document.getElementById('supConfirmOv').classList.add('active'); }
+function supCloseConfirm() { supDeleteIdx = null; document.getElementById('supConfirmOv').classList.remove('active'); }
+function supConfirmDelete() {
+  if (supDeleteIdx !== null) { supData.splice(supDeleteIdx, 1); supSaveData(); supRenderTable(); showToast('Entry deleted.'); }
+  supCloseConfirm();
+}
+
+// ── CSV Export ────────────────────────────────────────────────────────────────
+function supExportCSV() {
+  let csv = 'No.,Buildings,Supervisor,Time,Week Off\n';
+  supData.forEach((row, i) => {
+    const locs = (row.locations || []).join(' | ');
+    const offs = (row.weekOff || []).join(' | ') || 'None';
+    csv += `${i+1},"${locs}","${row.supervisor}","${row.time}","${offs}"\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Supervisor_Allocation_${supViewDate.toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('📥 CSV exported!');
+}
+
+// ── Share / WhatsApp image ────────────────────────────────────────────────────
+function supOpenShare() {
+  const dateStr = supViewDate.toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' });
+  document.getElementById('supShareLabel').textContent = 'Supervisor Allocation · ' + dateStr;
+  document.getElementById('supShareSpinner').style.display = 'flex';
+  document.getElementById('supShareContent').style.display = 'none';
+  supShareImgUrl = null;
+  document.getElementById('supShareOv').classList.add('open');
+
+  // Load html2canvas on demand
+  function generateImage() {
+    const todayDay = supTodayDay();
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:860px;background:#fff;font-family:"DM Sans",sans-serif;';
+    const logoSrc = document.querySelector('.header-logo img')?.src || '';
+    wrapper.innerHTML = `
+      <div style="background:linear-gradient(135deg,#004F4F,#006B6B);padding:16px 28px;display:flex;align-items:center;gap:16px;">
+        ${logoSrc ? `<img src="${logoSrc}" style="height:50px;width:auto;" crossorigin="anonymous"/>` : ''}
+        <div>
+          <div style="font-family:'Playfair Display',Georgia,serif;font-size:18px;color:#fff;font-weight:700;">Supervisor Allocation</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px;">GITAM – Field Tracker</div>
+        </div>
+        <div style="margin-left:auto;font-size:12px;color:rgba(255,255,255,.85);font-weight:500;">📅 ${dateStr}</div>
+      </div>
+      <div style="padding:18px 28px 24px;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr style="background:linear-gradient(135deg,#004F4F,#006B6B);">
+            <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:left;width:30px;">#</th>
+            <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:left;">Buildings</th>
+            <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:left;width:160px;">Supervisor</th>
+            <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:left;width:80px;">Time</th>
+            <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:left;width:100px;">Week Off</th>
+          </tr></thead>
+          <tbody>${supData.map((row, i) => {
+            const locs = row.locations || [];
+            const offs = row.weekOff || [];
+            const isOff = offs.includes(todayDay);
+            const tags = locs.map((loc, idx) => isOff
+              ? `<span style="background:#FFF3CD;color:#856404;border:1.5px dashed #FFD970;border-radius:20px;font-size:11px;font-weight:600;padding:2px 9px;margin:1px;display:inline-block;">⚠ ${loc}</span>`
+              : `<span style="background:${idx===0?'#004F4F':'#E0F2F2'};color:${idx===0?'#fff':'#004F4F'};border-radius:20px;font-size:11px;font-weight:600;padding:2px 9px;margin:1px;display:inline-block;">${loc}</span>`
+            ).join('');
+            const offBadges = offs.length ? offs.map(d => `<span style="background:#FFF3CD;color:#856404;border:1px solid #FFD970;border-radius:20px;font-size:10px;font-weight:700;padding:1px 7px;margin:1px;display:inline-block;">${d}</span>`).join('') : '—';
+            return `<tr style="background:${isOff?'#FFFBF0':i%2===0?'#fff':'#F4F8F8'};border-bottom:1px solid #C8E0E0;${isOff?'opacity:.8;':''}">
+              <td style="padding:9px 14px;font-size:12px;color:#5A7070;font-weight:600;">${i+1}</td>
+              <td style="padding:9px 14px;">${tags}</td>
+              <td style="padding:9px 14px;font-size:13px;font-weight:${isOff?'400':'600'};color:${isOff?'#5A7070':'#1A2E2E'};font-style:${isOff?'italic':'normal'};">${row.supervisor}${isOff?'<div style="margin-top:2px;"><span style="font-size:10px;font-weight:700;color:#856404;background:#FFF3CD;border:1px solid #FFD970;border-radius:4px;padding:1px 5px;">🏖 Week Off</span></div>':''}</td>
+              <td style="padding:9px 14px;"><span style="background:#E0F2F2;color:#004F4F;font-size:12px;font-weight:600;border-radius:20px;padding:2px 10px;border:1px solid #B2DFDF;display:inline-block;">${isOff?'—':supFmt12(row.time)}</span></td>
+              <td style="padding:9px 14px;">${offBadges}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>
+      <div style="padding:8px 28px;background:#F4F8F8;border-top:1px solid #C8E0E0;font-size:10px;color:#5A7070;text-align:center;">GITAM · Supervisor Allocation · ${dateStr}</div>`;
+    document.body.appendChild(wrapper);
+    setTimeout(() => {
+      html2canvas(wrapper, { backgroundColor:'#fff', scale:2, useCORS:true, logging:false, allowTaint:true })
+        .then(canvas => {
+          supShareImgUrl = canvas.toDataURL('image/png');
+          document.getElementById('supShareImg').src = supShareImgUrl;
+          document.getElementById('supShareSpinner').style.display = 'none';
+          document.getElementById('supShareContent').style.display = 'block';
+        }).catch(() => {
+          document.getElementById('supShareSpinner').style.display = 'none';
+          showToast('Could not generate image.');
+          supCloseShare();
+        }).finally(() => document.body.removeChild(wrapper));
+    }, 100);
+  }
+
+  // Load html2canvas if not already loaded
+  if (typeof html2canvas !== 'undefined') {
+    generateImage();
+  } else {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = generateImage;
+    s.onerror = () => { showToast('Could not load image library.'); supCloseShare(); };
+    document.head.appendChild(s);
+  }
+}
+
+function supCloseShare() { document.getElementById('supShareOv').classList.remove('open'); supShareImgUrl = null; }
+
+function supDataURLtoBlob(dataUrl) {
+  const arr = dataUrl.split(','), mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]); let n = bstr.length; const u8 = new Uint8Array(n);
+  while (n--) u8[n] = bstr.charCodeAt(n);
+  return new Blob([u8], { type: mime });
+}
+
+async function supShareWhatsApp() {
+  if (!supShareImgUrl) return;
+  const fileName = `GITAM_Supervisor_Allocation_${supViewDate.toISOString().slice(0,10)}.png`;
+  const file = new File([supDataURLtoBlob(supShareImgUrl)], fileName, { type:'image/png' });
+  const dateStr = supViewDate.toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' });
+  if (navigator.canShare && navigator.canShare({ files:[file] })) {
+    try { await navigator.share({ files:[file], title:'GITAM – Supervisor Allocation', text:`GITAM Supervisor Allocation · ${dateStr}` }); return; }
+    catch(e) { if (e.name === 'AbortError') return; }
+  }
+  supDownloadImg();
+  window.open(`https://wa.me/?text=${encodeURIComponent('GITAM – Supervisor Allocation\n' + dateStr + '\n\n(Image saved — please attach from downloads)')}`, '_blank');
+}
+
+function supDownloadImg() {
+  if (!supShareImgUrl) return;
+  const a = document.createElement('a');
+  a.href = supShareImgUrl;
+  a.download = `GITAM_Supervisor_Allocation_${supViewDate.toISOString().slice(0,10)}.png`;
+  a.click();
+}
+
 function _ratingCls(avg) {
   return avg >= 4 ? 'rating-good' : avg >= 3 ? 'rating-ok' : 'rating-bad';
 }
@@ -3122,6 +3825,7 @@ function exportFeedbackCsv() {
     // Normal app startup — pre-load Firestore data
     try { await Promise.race([loadCustomTasksFromFirestore(), new Promise(r=>setTimeout(r,4000))]); } catch(e){}
     try { await Promise.race([loadFeedbackFromFirestore(),    new Promise(r=>setTimeout(r,4000))]); } catch(e){}
+    supLoadData();
   });
 })();
 
