@@ -1133,6 +1133,7 @@ async function doLogin() {
   if (effectivePwd !== pass) { errorEl.style.display = 'block'; return; }
 
   currentUser = { ...user, id };
+  sessionStorage.setItem('gitam_session_user', id);
   viewingDate = todayKey();
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('mainApp').style.display = 'flex';
@@ -1143,6 +1144,7 @@ async function doLogin() {
 
 function doLogout() {
   currentUser = null;
+  sessionStorage.removeItem('gitam_session_user');
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('mainApp').style.display = 'none';
   document.getElementById('loginId').value = '';
@@ -3939,6 +3941,19 @@ function closeStaffDetail() {
     try { await Promise.race([loadCustomTasksFromFirestore(), new Promise(r=>setTimeout(r,4000))]); } catch(e){}
     try { await Promise.race([loadFeedbackFromFirestore(),    new Promise(r=>setTimeout(r,4000))]); } catch(e){}
     supLoadData();
+
+    // ── Restore session after browser refresh ──────────────────────────────
+    const savedId = sessionStorage.getItem('gitam_session_user');
+    if (savedId && USERS[savedId]) {
+      const user = USERS[savedId];
+      currentUser = { ...user, id: savedId };
+      viewingDate = todayKey();
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'flex';
+      document.getElementById('userLabel').textContent = user.label;
+      await buildNav();
+      showDashboard();
+    }
   });
 })();
 
