@@ -367,6 +367,7 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .fb-floor-cnt{font-size:10px;color:var(--text-muted);white-space:nowrap;}
 .fb-floor-avg{font-weight:700;font-size:14px;min-width:38px;text-align:right;white-space:nowrap;}
 .rating-good{color:#27AE60;}
+.rating-mid{color:#2980B9;}
 .rating-ok{color:#E67E22;}
 .rating-bad{color:#C0392B;}
 .fb-staff-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
@@ -382,6 +383,32 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .bar-ok{background:#E67E22;}
 .bar-bad{background:#C0392B;}
 .fb-perf-empty{font-size:12px;color:var(--text-muted);font-style:italic;padding:8px 0;}
+
+/* STAFF DETAIL MODAL */
+.staff-detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;display:none;align-items:center;justify-content:center;padding:16px;}
+.staff-detail-overlay.open{display:flex;}
+.staff-detail-modal{background:var(--white);border-radius:20px;width:580px;max-width:98vw;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;}
+.staff-detail-hdr{background:linear-gradient(135deg,#5B21B6,#7C3AED);padding:20px 24px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0;}
+.staff-detail-hdr-info h3{font-family:"Playfair Display",serif;font-size:18px;color:white;margin-bottom:4px;}
+.staff-detail-hdr-info p{font-size:12px;color:rgba(255,255,255,.75);}
+.staff-detail-close{background:rgba(255,255,255,.2);border:none;color:white;width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s;}
+.staff-detail-close:hover{background:rgba(255,255,255,.35);}
+.staff-detail-summary{display:flex;gap:12px;padding:14px 20px;background:var(--bg);border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0;}
+.staff-detail-stat{text-align:center;flex:1;min-width:80px;}
+.staff-detail-stat-num{font-size:20px;font-weight:700;color:var(--teal-dark);}
+.staff-detail-stat-lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.staff-detail-entries{overflow-y:auto;flex:1;padding:8px 0;}
+.staff-detail-entry{padding:12px 20px;border-bottom:1px solid var(--bg);}
+.staff-detail-entry:last-child{border-bottom:none;}
+.staff-detail-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.staff-detail-entry-loc{font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.5px;flex:1;}
+.staff-detail-entry-stars{font-size:13px;font-weight:700;}
+.staff-detail-entry-date{font-size:10px;color:var(--text-muted);}
+.staff-detail-entry-meta{font-size:11px;color:var(--text-muted);margin-bottom:4px;}
+.staff-detail-entry-comment{font-size:13px;color:var(--text);line-height:1.4;font-style:italic;}
+.staff-detail-empty{padding:40px;text-align:center;color:var(--text-muted);font-size:13px;}
+.btn-responses{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:13px;font-weight:600;color:var(--teal);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;display:inline-flex;align-items:center;gap:4px;}
+.btn-responses:hover{background:var(--teal-pale);border-color:var(--teal);}
 
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;}
@@ -723,6 +750,10 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
         <div class="fb-input-group">
           <label>Your ID <span style="color:var(--red);">*</span></label>
           <input type="text" id="fbUserId" placeholder="e.g. Student / Staff ID" maxlength="40" oninput="checkFbReady()">
+        </div>
+        <div class="fb-input-group">
+          <label>Your Name <span style="color:var(--red);">*</span></label>
+          <input type="text" id="fbUserName" placeholder="e.g. Ravi Kumar" maxlength="60" oninput="checkFbReady()">
         </div>
       </div>
       <div class="fb-section-label">Rate Cleanliness</div>
@@ -1103,8 +1134,6 @@ async function doLogin() {
 
   currentUser = { ...user, id };
   viewingDate = todayKey();
-  // Persist session so page refresh doesn't force re-login
-  localStorage.setItem('gitam_session', JSON.stringify({ id, ts: Date.now() }));
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('mainApp').style.display = 'flex';
   document.getElementById('userLabel').textContent = user.label;
@@ -1114,7 +1143,6 @@ async function doLogin() {
 
 function doLogout() {
   currentUser = null;
-  localStorage.removeItem('gitam_session');
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('mainApp').style.display = 'none';
   document.getElementById('loginId').value = '';
@@ -2885,18 +2913,21 @@ function unHoverFbStar() {
 }
 
 function checkFbReady() {
-  const roomNo = (document.getElementById('fbRoomNo').value || '').trim();
-  const userId = (document.getElementById('fbUserId').value || '').trim();
+  const roomNo   = (document.getElementById('fbRoomNo').value   || '').trim();
+  const userId   = (document.getElementById('fbUserId').value   || '').trim();
+  const userName = (document.getElementById('fbUserName').value || '').trim();
   const btn = document.getElementById('fbSubmitBtn');
-  btn.disabled = !(_fbRating && roomNo && userId);
+  btn.disabled = !(_fbRating && roomNo && userId && userName);
 }
 
 async function submitFeedback() {
   if (!_fbRating) return;
   const roomNo = (document.getElementById('fbRoomNo').value || '').trim();
   const userId = (document.getElementById('fbUserId').value || '').trim();
+  const userName = (document.getElementById('fbUserName').value || '').trim();
   if (!roomNo) { document.getElementById('fbRoomNo').focus(); showFbError('Please enter your room number.'); return; }
   if (!userId) { document.getElementById('fbUserId').focus(); showFbError('Please enter your ID.'); return; }
+  if (!userName) { document.getElementById('fbUserName').focus(); showFbError('Please enter your name.'); return; }
   hideFbError();
   const fbPage = document.getElementById('feedbackPage');
   const building = fbPage.dataset.building;
@@ -2906,7 +2937,7 @@ async function submitFeedback() {
   const staff = staffStr ? staffStr.split(',').filter(Boolean) : [];
   const entry = {
     building, floor, staff,
-    roomNo, userId,
+    roomNo, userId, userName,
     rating: _fbRating,
     comment,
     ts: new Date().toISOString(),
@@ -3569,7 +3600,7 @@ function supDownloadImg() {
 }
 
 function _ratingCls(avg) {
-  return avg >= 4 ? 'rating-good' : avg >= 3 ? 'rating-ok' : 'rating-bad';
+  return avg >= 4 ? 'rating-good' : avg >= 3 ? 'rating-mid' : 'rating-bad';
 }
 function _barCls(avg) {
   return avg >= 4 ? 'bar-good' : avg >= 3 ? 'bar-ok' : 'bar-bad';
@@ -3612,11 +3643,18 @@ function renderFeedbackAdminHtml() {
           <div class="fb-star-avg">${avgRating}</div>
           <div class="fb-stat-lbl">Avg Rating</div>
         </div>
-        ${starsPct.map(sp => `<div class="fb-stat-box">
-          <div class="fb-stat-num" style="font-size:18px;">${'★'.repeat(sp.s)}</div>
-          <div class="fb-stat-num" style="font-size:16px;">${sp.cnt}</div>
-          <div class="fb-stat-lbl">${sp.pct}% of total</div>
-        </div>`).join('')}
+        ${(function(){
+          const starColors = {1:'#C0392B',2:'#C0392B',3:'#2980B9',4:'#D4A843',5:'#27AE60'};
+          const starEmojis = {1:'😡',2:'😞',3:'😐',4:'😊',5:'😄'};
+          const starLabels = {1:'Poor',2:'Bad',3:'Okay',4:'Good',5:'Excellent'};
+          return starsPct.map(sp => `<div class="fb-stat-box" style="border-top:3px solid ${starColors[sp.s]};">
+            <div style="font-size:22px;margin-bottom:2px;">${starEmojis[sp.s]}</div>
+            <div class="fb-stat-num" style="font-size:16px;color:${starColors[sp.s]};letter-spacing:1px;">${'★'.repeat(sp.s)}${'☆'.repeat(5-sp.s)}</div>
+            <div style="font-size:10px;font-weight:700;color:${starColors[sp.s]};text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">${starLabels[sp.s]}</div>
+            <div class="fb-stat-num" style="font-size:20px;">${sp.cnt}</div>
+            <div class="fb-stat-lbl">${sp.pct}% of total</div>
+          </div>`).join('');
+        })()}
       </div>
 
       <div class="fb-perf-section">
@@ -3663,6 +3701,7 @@ function refreshFeedbackList() {
   if (searchRaw) all = all.filter(e =>
     (e.roomNo   || '').toLowerCase().includes(searchRaw) ||
     (e.userId   || '').toLowerCase().includes(searchRaw) ||
+    (e.userName || '').toLowerCase().includes(searchRaw) ||
     (e.comment  || '').toLowerCase().includes(searchRaw) ||
     (e.floor    || '').toLowerCase().includes(searchRaw) ||
     (e.building || '').toLowerCase().includes(searchRaw) ||
@@ -3703,13 +3742,14 @@ function refreshFeedbackList() {
               var avgStr = avg.toFixed(1);
               var staffArr = Array.from(d.staff);
               var staffStr = staffArr.length ? staffArr.join(', ') : '—';
+              var avgEmoji = avg >= 4.5 ? '😄' : avg >= 3.5 ? '😊' : avg >= 2.5 ? '😐' : avg >= 1.5 ? '😞' : '😡';
               return '<div class="fb-floor-row">' +
                 '<div class="fb-floor-info">' +
                   '<div class="fb-floor-name">' + fn + '</div>' +
                   '<div class="fb-floor-staff-tag">👷 ' + staffStr + '</div>' +
                 '</div>' +
                 '<div class="fb-floor-cnt">' + d.ratings.length + ' resp</div>' +
-                '<div class="fb-floor-avg ' + _ratingCls(avg) + '">' + avgStr + '★</div>' +
+                '<div class="fb-floor-avg ' + _ratingCls(avg) + '">' + avgStr + '★ ' + avgEmoji + '</div>' +
               '</div>';
             }).join('') +
           '</div>';
@@ -3756,15 +3796,20 @@ function refreshFeedbackList() {
           staffList.map(function(s) {
             var avgStr = s.avg.toFixed(1);
             var barW   = Math.round((s.avg / 5) * 100);
-            var stars  = '★'.repeat(Math.round(s.avg)) + '☆'.repeat(5 - Math.round(s.avg));
+            var roundedRating = Math.round(s.avg);
+            var starColorMap = {1:'#C0392B',2:'#C0392B',3:'#2980B9',4:'#D4A843',5:'#27AE60'};
+            var starEmojiMap = {1:'😡',2:'😞',3:'😐',4:'😊',5:'😄'};
+            var sColor = starColorMap[roundedRating] || '#F5B301';
+            var sEmoji = starEmojiMap[roundedRating] || '';
+            var stars  = '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating);
             return '<tr>' +
               '<td class="fb-staff-name-cell">👷 ' + s.name + '</td>' +
               '<td>' +
                 '<span class="fb-floor-avg ' + _ratingCls(s.avg) + '" style="font-size:15px;">' + avgStr + '</span>' +
-                '<span style="color:#F5B301;font-size:12px;margin-left:4px;">' + stars + '</span>' +
+                '<span style="color:' + sColor + ';font-size:12px;margin-left:4px;">' + stars + ' ' + sEmoji + '</span>' +
                 '<span class="fb-rating-bar-wrap"><span class="fb-rating-bar ' + _barCls(s.avg) + '" style="width:' + barW + '%"></span></span>' +
               '</td>' +
-              '<td style="color:var(--text-muted);">' + s.count + '</td>' +
+              '<td><button class="btn-responses" onclick="openStaffDetail(\'' + s.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\')">👁 ' + s.count + ' response' + (s.count !== 1 ? 's' : '') + '</button></td>' +
               '<td style="font-size:11px;color:var(--text-muted);">' + s.floors + '</td>' +
             '</tr>';
           }).join('') +
@@ -3788,13 +3833,15 @@ function refreshFeedbackList() {
     const commentHtml = e.comment
       ? `<div class="fb-entry-comment">"${e.comment}"</div>`
       : '<div style="font-size:11px;color:var(--text-muted);font-style:italic;">No comment</div>';
-    const metaHtml = (e.roomNo || e.userId)
-      ? `<div class="fb-entry-meta">${e.roomNo ? '🏷 Room: <strong>' + e.roomNo + '</strong>' : ''}${e.roomNo && e.userId ? ' &nbsp;|&nbsp; ' : ''}${e.userId ? '🪪 ID: <strong>' + e.userId + '</strong>' : ''}</div>`
+    const metaHtml = (e.roomNo || e.userId || e.userName)
+      ? `<div class="fb-entry-meta">${e.roomNo ? '🏷 Room: <strong>' + e.roomNo + '</strong>' : ''}${e.roomNo && (e.userId || e.userName) ? ' &nbsp;|&nbsp; ' : ''}${e.userId ? '🪪 ID: <strong>' + e.userId + '</strong>' : ''}${e.userId && e.userName ? ' &nbsp;|&nbsp; ' : ''}${e.userName ? '👤 Name: <strong>' + e.userName + '</strong>' : ''}</div>`
       : '';
+    const _eStarColor = e.rating <= 2 ? '#C0392B' : e.rating === 3 ? '#2980B9' : e.rating === 4 ? '#D4A843' : '#27AE60';
+    const _eStarEmoji = {1:'😡',2:'😞',3:'😐',4:'😊',5:'😄'}[e.rating] || '';
     return `<div class="fb-entry">
       <div class="fb-entry-hdr">
         <span class="fb-entry-loc">${e.building} — ${e.floor}</span>
-        <span class="fb-entry-stars">${'★'.repeat(e.rating)}${'☆'.repeat(5-e.rating)}</span>
+        <span class="fb-entry-stars" style="color:${_eStarColor}">${'★'.repeat(e.rating)}${'☆'.repeat(5-e.rating)} ${_eStarEmoji}</span>
         <span class="fb-entry-time">${e.date || e.ts.slice(0,10)}</span>
       </div>
       ${metaHtml}${staffHtml}${commentHtml}
@@ -3805,8 +3852,8 @@ function refreshFeedbackList() {
 function exportFeedbackCsv() {
   const all = getAllFeedback();
   if (!all.length) { showToast('No feedback to export'); return; }
-  const rows = [['Date','Building','Floor','Room No.','User ID','Staff','Rating','Comment']];
-  all.forEach(e => rows.push([e.date || e.ts.slice(0,10), e.building, e.floor, e.roomNo||'', e.userId||'', (e.staff||[]).join(' | '), e.rating, (e.comment||'').replace(/,/g,' ')]));
+  const rows = [['Date','Building','Floor','Room No.','User ID','Name','Staff','Rating','Comment']];
+  all.forEach(e => rows.push([e.date || e.ts.slice(0,10), e.building, e.floor, e.roomNo||'', e.userId||'', e.userName||'', (e.staff||[]).join(' | '), e.rating, (e.comment||'').replace(/,/g,' ')]));
   const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
   const blob = new Blob([csv], {type:'text/csv'});
   const a = document.createElement('a');
@@ -3816,39 +3863,70 @@ function exportFeedbackCsv() {
   showToast('📥 CSV exported!');
 }
 
-// ── SESSION RESTORE: attempt to resume a previous session on page load/refresh ─
-async function tryRestoreSession() {
-  try {
-    const raw = localStorage.getItem('gitam_session');
-    if (!raw) return false;
-    const sess = JSON.parse(raw);
-    if (!sess || !sess.id) return false;
 
-    // Optional: expire session after 12 hours (43200000 ms)
-    const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
-    if (sess.ts && (Date.now() - sess.ts) > SESSION_TTL_MS) {
-      localStorage.removeItem('gitam_session');
-      return false;
-    }
+// ── STAFF DETAIL MODAL ────────────────────────────────────────────────────────
+function openStaffDetail(staffName) {
+  var all = getAllFeedback();
+  var entries = all.filter(function(e) {
+    return (e.staff || []).indexOf(staffName) !== -1;
+  }).sort(function(a,b){ return b.ts.localeCompare(a.ts); });
 
-    const user = USERS[sess.id];
-    if (!user) { localStorage.removeItem('gitam_session'); return false; }
+  document.getElementById('staffDetailName').textContent = '👷 ' + staffName;
+  document.getElementById('staffDetailSub').textContent = entries.length + ' feedback response' + (entries.length !== 1 ? 's' : '');
 
-    currentUser = { ...user, id: sess.id };
-    viewingDate = todayKey();
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('mainApp').style.display = 'flex';
-    document.getElementById('userLabel').textContent = user.label;
-    await buildNav();
-    showDashboard();
-    return true;
-  } catch(e) {
-    localStorage.removeItem('gitam_session');
-    return false;
+  // Summary stats
+  var total = entries.length;
+  var avg   = total ? (entries.reduce(function(s,e){return s+e.rating;},0) / total) : 0;
+  var best  = total ? Math.max.apply(null, entries.map(function(e){return e.rating;})) : 0;
+  var worst = total ? Math.min.apply(null, entries.map(function(e){return e.rating;})) : 0;
+  var starColorMap = {1:'#C0392B',2:'#C0392B',3:'#2980B9',4:'#D4A843',5:'#27AE60'};
+  var starEmojiMap = {1:'😡',2:'😞',3:'😐',4:'😊',5:'😄'};
+
+  document.getElementById('staffDetailSummary').innerHTML =
+    '<div class="staff-detail-stat"><div class="staff-detail-stat-num">' + total + '</div><div class="staff-detail-stat-lbl">Responses</div></div>' +
+    '<div class="staff-detail-stat"><div class="staff-detail-stat-num" style="color:' + (starColorMap[Math.round(avg)]||'var(--teal-dark)') + '">' + avg.toFixed(1) + '★</div><div class="staff-detail-stat-lbl">Avg Rating</div></div>' +
+    '<div class="staff-detail-stat"><div class="staff-detail-stat-num" style="color:#27AE60">' + best + '★</div><div class="staff-detail-stat-lbl">Best</div></div>' +
+    '<div class="staff-detail-stat"><div class="staff-detail-stat-num" style="color:#C0392B">' + worst + '★</div><div class="staff-detail-stat-lbl">Worst</div></div>';
+
+  // Entries
+  if (!entries.length) {
+    document.getElementById('staffDetailEntries').innerHTML = '<div class="staff-detail-empty">No feedback entries found.</div>';
+  } else {
+    document.getElementById('staffDetailEntries').innerHTML = entries.map(function(e) {
+      var sc  = e.rating <= 2 ? '#C0392B' : e.rating === 3 ? '#2980B9' : e.rating === 4 ? '#D4A843' : '#27AE60';
+      var em  = starEmojiMap[e.rating] || '';
+      var stars = '★'.repeat(e.rating) + '☆'.repeat(5 - e.rating);
+      var meta = (e.roomNo || e.userId || e.userName)
+        ? '<div class="staff-detail-entry-meta">' +
+            (e.roomNo ? '🏷 Room: <strong>' + e.roomNo + '</strong>' : '') +
+            (e.roomNo && (e.userId || e.userName) ? ' &nbsp;|&nbsp; ' : '') +
+            (e.userId ? '🪪 ID: <strong>' + e.userId + '</strong>' : '') +
+            (e.userId && e.userName ? ' &nbsp;|&nbsp; ' : '') +
+            (e.userName ? '👤 Name: <strong>' + e.userName + '</strong>' : '') +
+          '</div>'
+        : '';
+      var comment = e.comment
+        ? '<div class="staff-detail-entry-comment">"' + e.comment + '"</div>'
+        : '<div style="font-size:11px;color:var(--text-muted);font-style:italic;">No comment</div>';
+      return '<div class="staff-detail-entry">' +
+        '<div class="staff-detail-entry-hdr">' +
+          '<span class="staff-detail-entry-loc">' + (e.building||'') + (e.floor ? ' — ' + e.floor : '') + '</span>' +
+          '<span class="staff-detail-entry-stars" style="color:' + sc + '">' + stars + ' ' + em + '</span>' +
+          '<span class="staff-detail-entry-date">' + (e.date || (e.ts||'').slice(0,10)) + '</span>' +
+        '</div>' +
+        meta + comment +
+      '</div>';
+    }).join('');
   }
+
+  document.getElementById('staffDetailOverlay').classList.add('open');
 }
 
-// ── STARTUP: check if this is a feedback URL ──────────────────────────────────
+function closeStaffDetail() {
+  document.getElementById('staffDetailOverlay').classList.remove('open');
+}
+
+
 (function() {
   window.addEventListener('DOMContentLoaded', async () => {
     // If this is a feedback/QR scan URL, show the page immediately — no Firestore wait needed to render the form
@@ -3861,17 +3939,25 @@ async function tryRestoreSession() {
     try { await Promise.race([loadCustomTasksFromFirestore(), new Promise(r=>setTimeout(r,4000))]); } catch(e){}
     try { await Promise.race([loadFeedbackFromFirestore(),    new Promise(r=>setTimeout(r,4000))]); } catch(e){}
     supLoadData();
-
-    // Restore previous session if available (prevents redirect to login on refresh)
-    const restored = await tryRestoreSession();
-    if (!restored) {
-      // No valid session — ensure login page is visible
-      document.getElementById('loginPage').style.display = 'flex';
-      document.getElementById('mainApp').style.display = 'none';
-    }
   });
 })();
 
 </script>
+
+<!-- STAFF DETAIL MODAL -->
+<div class="staff-detail-overlay" id="staffDetailOverlay" onclick="if(event.target===this)closeStaffDetail()">
+  <div class="staff-detail-modal">
+    <div class="staff-detail-hdr">
+      <div class="staff-detail-hdr-info">
+        <h3 id="staffDetailName">Staff Member</h3>
+        <p id="staffDetailSub">Feedback responses</p>
+      </div>
+      <button class="staff-detail-close" onclick="closeStaffDetail()">✕</button>
+    </div>
+    <div class="staff-detail-summary" id="staffDetailSummary"></div>
+    <div class="staff-detail-entries" id="staffDetailEntries"></div>
+  </div>
+</div>
+
 </body>
 </html>
