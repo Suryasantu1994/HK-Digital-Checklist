@@ -985,7 +985,15 @@ async function preloadBuildingData(building, date) {
       });
     });
 
-    await Promise.all(reads.concat(staffReads).concat(noteReads).concat(freqReads));
+    // Staff names list for this building (global, not date-specific)
+    var staffNamesRead = db.collection('staffNames').doc(_fsId('staffNames', building)).get()
+      .then(function(snap) {
+        if (snap.exists && snap.data().names) {
+          localStorage.setItem(staffNamesKey(building), JSON.stringify(snap.data().names));
+        }
+      }).catch(function(){});
+
+    await Promise.all(reads.concat(staffReads).concat(noteReads).concat(freqReads).concat([staffNamesRead]));
   } catch(e) {
     console.warn('Preload error:', e);
   }
@@ -1323,7 +1331,9 @@ function addBldgStaffName(bk) {
   if (names.indexOf(name) !== -1) { showToast('⚠️ Already in list'); return; }
   names.push(name);
   names.sort(function(a,b){ return a.localeCompare(b); });
-  localStorage.setItem(staffNamesKey(bk), JSON.stringify(names));
+  _fsWrite('staffNames', _fsId('staffNames', bk),
+    { names: names, building: bk },
+    staffNamesKey(bk), names);
   if (input) input.value = '';
   renderBldgStaffNamesList(bk);
   showToast('✅ "' + name + '" added to ' + bk);
@@ -1332,7 +1342,9 @@ function addBldgStaffName(bk) {
 function removeBldgStaffName(bk, idx) {
   var names = getStaffNamesList(bk);
   var removed = names.splice(idx, 1);
-  localStorage.setItem(staffNamesKey(bk), JSON.stringify(names));
+  _fsWrite('staffNames', _fsId('staffNames', bk),
+    { names: names, building: bk },
+    staffNamesKey(bk), names);
   renderBldgStaffNamesList(bk);
   showToast('🗑 "' + (removed[0]||'Name') + '" removed');
 }
@@ -1340,6 +1352,10 @@ function removeBldgStaffName(bk, idx) {
 function resetBldgStaffNames(bk) {
   if (!confirm('Reset staff names for ' + bk + ' to default? Custom additions will be lost.')) return;
   localStorage.removeItem(staffNamesKey(bk));
+  var db = _getDb();
+  if (db) {
+    db.collection('staffNames').doc(_fsId('staffNames', bk)).delete().catch(function(){});
+  }
   renderBldgStaffNamesList(bk);
   showToast('↩ Reset to default for ' + bk);
 }
