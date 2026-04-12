@@ -719,16 +719,30 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 
 <!-- ── STAFF ASSIGNMENT MODAL ─────────────────────────────────────────────── -->
 <div class="staff-modal-overlay" id="staffModal">
-  <div class="staff-modal">
+  <div class="staff-modal" style="width:500px;max-width:96vw;">
     <button class="staff-modal-close" onclick="closeStaffModal()">✕</button>
     <h3>👷 Assign Staff</h3>
     <div class="modal-loc" id="staffModalLoc"></div>
+
+    <!-- Currently assigned chips -->
     <div class="staff-chips" id="staffModalChips"></div>
-    <div class="staff-add-row">
-      <input type="text" id="staffModalInput" placeholder="Enter staff name..." maxlength="60" onkeydown="if(event.key==='Enter')addStaffFromModal()">
-      <button class="btn btn-p" onclick="addStaffFromModal()">+ Add</button>
+
+    <!-- Building staff picker -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Select from Building Staff</div>
+      <div id="staffPickerList" style="display:flex;flex-wrap:wrap;gap:7px;max-height:200px;overflow-y:auto;padding:6px;background:var(--bg);border-radius:10px;border:1px solid var(--border);min-height:40px;"></div>
     </div>
-    <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:8px;">
+
+    <!-- Custom name -->
+    <div style="border-top:1px solid var(--border);padding-top:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Or Enter Custom Name</div>
+      <div class="staff-add-row">
+        <input type="text" id="staffModalInput" placeholder="Type a name..." maxlength="60" onkeydown="if(event.key==='Enter')addStaffFromModal()">
+        <button class="btn btn-p" onclick="addStaffFromModal()">+ Add</button>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;display:flex;justify-content:flex-end;">
       <button class="btn btn-s" onclick="closeStaffModal()">Close</button>
     </div>
   </div>
@@ -1036,9 +1050,10 @@ function getStaff(building, floor, date) {
 function setStaff(building, floor, arr, date) {
   var lsKey = staffKey(building, floor, date);
   var d = date || viewingDate;
+  var safeArr = arr || [];
   _fsWrite('staff', _fsId('staff', building, floor, d),
-    { staff: arr || [], building: building, floor: floor, date: d },
-    lsKey, (arr && arr.length) ? arr : null);
+    { staff: safeArr, building: building, floor: floor, date: d },
+    lsKey, safeArr);
 }
 
 // ── FREQUENCY CHECKS ────────────────────────────────────────────────────────
@@ -1186,7 +1201,6 @@ function submitForgotRequest() {
 // ── ADMIN PASSWORD MANAGEMENT ─────────────────────────────────────────────────
 async function showPasswordManagement() {
   setActiveTab('passwords');
-  const pending = await getPendingResets();
   let html = `
     <div class="dash-header">
       <div class="dash-header-left">
@@ -1194,28 +1208,6 @@ async function showPasswordManagement() {
         <p style="color:var(--text-muted);margin-top:4px;">Reset credentials for any building user. Only admins can access this.</p>
       </div>
     </div>`;
-
-  if (pending.length > 0) {
-    html += `<div class="pwd-mgmt-card" style="margin-bottom:24px;">
-      <div class="pwd-mgmt-hdr">
-        <h3>⚠️ Pending Reset Requests</h3>
-        <span class="pwd-req-count visible">${pending.length} pending</span>
-      </div>
-      <div style="padding:16px 20px;">
-        <table class="pwd-table">
-          <thead><tr><th>User</th><th>Building</th><th>Requested At</th><th>Action</th></tr></thead>
-          <tbody>`;
-    for (const req of pending) {
-      const dt = new Date(req.ts).toLocaleString('en-IN', {dateStyle:'medium', timeStyle:'short'});
-      html += `<tr>
-        <td><strong>${req.userId}</strong></td>
-        <td>${req.label}</td>
-        <td>${dt}</td>
-        <td><button class="btn btn-p" style="font-size:12px;padding:6px 12px;" onclick="openAdminResetModal('${req.userId}',true)">🔑 Reset Now</button></td>
-      </tr>`;
-    }
-    html += `</tbody></table></div></div>`;
-  }
 
   // All users — load from Firestore users collection
   let userRows = '';
@@ -1303,6 +1295,55 @@ async function confirmAdminReset() {
   showPasswordManagement();
 }
 
+// ── PER-BUILDING STAFF NAMES ADMIN ───────────────────────────────────────────
+function renderBldgStaffNamesList(bk) {
+  var domId = 'staffNamesList_' + bk.replace(/\s+/g,'_');
+  var wrap = document.getElementById(domId);
+  if (!wrap) return;
+  var names = getStaffNamesList(bk);
+  if (!names.length) {
+    wrap.innerHTML = '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">No names added yet.</span>';
+    return;
+  }
+  wrap.innerHTML = names.map(function(name, i) {
+    return '<span style="display:inline-flex;align-items:center;gap:4px;background:var(--teal-pale);border:1px solid var(--teal-mid);color:var(--teal-dark);font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;">' +
+      name +
+      '<button onclick="removeBldgStaffName(\'' + bk.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\',' + i + ')" title="Remove" ' +
+        'style="background:none;border:none;color:var(--teal-dark);cursor:pointer;font-size:13px;line-height:1;padding:0 0 0 2px;opacity:.55;">✕</button>' +
+      '</span>';
+  }).join('');
+}
+
+function addBldgStaffName(bk) {
+  var inputId = 'newStaffName_' + bk.replace(/\s+/g,'_');
+  var input = document.getElementById(inputId);
+  var name = (input ? input.value : '').trim();
+  if (!name) { showToast('Please enter a name'); return; }
+  var names = getStaffNamesList(bk);
+  if (names.indexOf(name) !== -1) { showToast('⚠️ Already in list'); return; }
+  names.push(name);
+  names.sort(function(a,b){ return a.localeCompare(b); });
+  localStorage.setItem(staffNamesKey(bk), JSON.stringify(names));
+  if (input) input.value = '';
+  renderBldgStaffNamesList(bk);
+  showToast('✅ "' + name + '" added to ' + bk);
+}
+
+function removeBldgStaffName(bk, idx) {
+  var names = getStaffNamesList(bk);
+  var removed = names.splice(idx, 1);
+  localStorage.setItem(staffNamesKey(bk), JSON.stringify(names));
+  renderBldgStaffNamesList(bk);
+  showToast('🗑 "' + (removed[0]||'Name') + '" removed');
+}
+
+function resetBldgStaffNames(bk) {
+  if (!confirm('Reset staff names for ' + bk + ' to default? Custom additions will be lost.')) return;
+  localStorage.removeItem(staffNamesKey(bk));
+  renderBldgStaffNamesList(bk);
+  showToast('↩ Reset to default for ' + bk);
+}
+
 // ── NAV ───────────────────────────────────────────────────────────────────────
 async function buildNav() {
   const nav = document.getElementById('navTabs');
@@ -1312,12 +1353,11 @@ async function buildNav() {
   }
   html += `<button class="nav-tab" id="tab-supervisors" onclick="showSupervisorAllocation()">👷 Supervisors</button>`;
   if (currentUser.role === 'admin') {
-    const pending = await getPendingResets();
-    const badge = pending.length > 0 ? ` <span style="background:#E53E3E;color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;margin-left:4px;">${pending.length}</span>` : '';
-    html += `<button class="nav-tab" id="tab-passwords" onclick="showPasswordManagement()">🔐 Passwords${badge}</button>`;
+    html += `<button class="nav-tab" id="tab-passwords" onclick="showPasswordManagement()">🔐 Passwords</button>`;
     const fbCount = getAllFeedback().length;
     const fbBadge = fbCount > 0 ? ` <span style="background:#7C3AED;color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;margin-left:4px;">${fbCount}</span>` : '';
     html += `<button class="nav-tab" id="tab-feedback" onclick="showFeedbackAdmin()">⭐ Feedback${fbBadge}</button>`;
+    html += `<button class="nav-tab" id="tab-staffnames" onclick="showStaffNamesAdmin()">👷 Staff Names</button>`;
 
   }
   nav.innerHTML = html;
@@ -1848,6 +1888,68 @@ function renderFloorItems() {
   if (list) list.innerHTML = itemsHtml;
 }
 
+// ── BUILDING-WISE STAFF NAMES ─────────────────────────────────────────────────
+// Per-building staff name lists, managed by admin in the Passwords tab.
+// Key: 'gitam_staff_names_<buildingKey>'
+const STAFF_NAMES_DEFAULTS = {
+  'Shivaji Bhavan':      ['Anand','Basamma','Chandrakala','Devaraj','Geetha','Girish','Hanumantha','Jayamma','Krishnappa','Lakshmi','Mahesh','Malathi','Manjula','Meena','Nagamma','Nagaraju','Nanjappa','Padmavathi','Parvathi','Pushpa','Rajamma','Raju','Ramesh','Rekha','Roopa','Savitha','Shantha','Shobha','Sridevi','Srinivas','Sudha','Suresh','Usha','Vijaya'],
+  'Visvesvaraya Bhavan': ['Basamma','Bhavani','Chandrakala','Geetha','Jayamma','Kalpana','Kavitha','Lakshmi','Madhuri','Malathi','Manjula','Meena','Nagamma','Padmavathi','Parvathi','Prema','Pushpa','Rajamma','Rekha','Roopa','Savitha','Shantha','Shobha','Sridevi','Sudha','Usha','Venkataramaiah','Vijaya','Yamuna'],
+  'Vinay Sadan':         ['Anand','Basamma','Devaraj','Geetha','Hanumantha','Jayamma','Krishnappa','Lakshmi','Mahesh','Malathi','Nagamma','Nagaraju','Padmavathi','Rajamma','Raju','Ramesh','Rekha','Savitha','Shantha','Sridevi','Sudha','Suresh','Vijaya'],
+  'Staff Quarters':      ['Anand','Bhavani','Devaraj','Geetha','Krishnappa','Lakshmi','Mahesh','Nagamma','Nagaraju','Parvathi','Raju','Ramesh','Satish','Savitha','Shantha','Srinivas','Suresh','Vijaya','Vinod'],
+  'NBH Boys Hostel':     ['Anand','Basamma','Devaraj','Geetha','Girish','Hanumantha','Jayamma','Krishnappa','Lakshmi','Mahesh','Nagamma','Nagaraju','Nanjappa','Padmavathi','Rajamma','Raju','Ramesh','Rekha','Savitha','Shantha','Sridevi','Sudha','Suresh','Vinod','Yamuna'],
+  'SBH Girls Hostel':    ['Basamma','Bhavani','Chandrakala','Geetha','Jayamma','Kalpana','Kavitha','Lakshmi','Madhuri','Malathi','Manjula','Meena','Nagamma','Padmavathi','Parvathi','Pushpa','Rajamma','Rekha','Roopa','Savitha','Shantha','Shobha','Sridevi','Sudha','Usha','Vijaya','Yamuna'],
+};
+
+function staffNamesKey(building) {
+  return 'gitam_staff_names_' + building;
+}
+
+function getStaffNamesList(building) {
+  try {
+    var saved = localStorage.getItem(staffNamesKey(building));
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return (STAFF_NAMES_DEFAULTS[building] || []).slice();
+}
+
+function renderStaffPickerList() {
+  var bk = _staffModalBuilding;
+  var allNames = getStaffNamesList(bk);
+  var assigned = getStaff(bk, _staffModalFloor, viewingDate);
+  var wrap = document.getElementById('staffPickerList');
+  if (!wrap) return;
+
+  if (!allNames.length) {
+    wrap.innerHTML = '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">No staff names configured for this building. Add names in the Passwords tab.</span>';
+    return;
+  }
+
+  wrap.innerHTML = '';
+  allNames.forEach(function(name) {
+    var isAssigned = assigned.indexOf(name) !== -1;
+    var btn = document.createElement('button');
+    btn.style.cssText = 'padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;' +
+      'font-family:\'DM Sans\',sans-serif;border:2px solid ' + (isAssigned ? 'var(--teal)' : 'var(--border)') + ';' +
+      'background:' + (isAssigned ? 'var(--teal)' : 'var(--white)') + ';' +
+      'color:' + (isAssigned ? 'white' : 'var(--text-muted)') + ';transition:all .15s;';
+    btn.textContent = (isAssigned ? '✓ ' : '') + name;
+    btn.addEventListener('click', function() { toggleStaffFromPicker(name); });
+    wrap.appendChild(btn);
+  });
+}
+
+function toggleStaffFromPicker(name) {
+  if (!canEdit()) { showToast('🔒 Cannot edit for this date'); return; }
+  var staff = getStaff(_staffModalBuilding, _staffModalFloor, viewingDate);
+  var idx = staff.indexOf(name);
+  if (idx === -1) { staff.push(name); showToast('👷 ' + name + ' assigned'); }
+  else { staff.splice(idx, 1); showToast('👷 ' + name + ' removed'); }
+  setStaff(_staffModalBuilding, _staffModalFloor, staff, viewingDate);
+  renderStaffModalChips();
+  renderStaffPickerList();
+  refreshFloorTab(_staffModalBuilding, _staffModalFloor);
+}
+
 // ── STAFF ASSIGNMENT FUNCTIONS ────────────────────────────────────────────────
 let _staffModalBuilding = null, _staffModalFloor = null;
 
@@ -1886,9 +1988,9 @@ function openStaffModal(bk, fn) {
   _staffModalFloor = fn;
   document.getElementById('staffModalLoc').textContent = bk + ' — ' + fn;
   renderStaffModalChips();
+  renderStaffPickerList();
   document.getElementById('staffModalInput').value = '';
   document.getElementById('staffModal').classList.add('open');
-  setTimeout(() => document.getElementById('staffModalInput').focus(), 100);
 }
 
 // Refresh a single floor tab's staff label in-place (no full re-render needed)
@@ -1945,6 +2047,7 @@ function addStaffFromModal() {
   setStaff(_staffModalBuilding, _staffModalFloor, staff, viewingDate);
   input.value = '';
   renderStaffModalChips();
+  renderStaffPickerList();
   refreshFloorTab(_staffModalBuilding, _staffModalFloor);
   showToast('👷 ' + name + ' assigned');
 }
@@ -1955,6 +2058,7 @@ function removeStaffModal(idx) {
   const removed = staff.splice(idx, 1);
   setStaff(_staffModalBuilding, _staffModalFloor, staff, viewingDate);
   renderStaffModalChips();
+  renderStaffPickerList();
   refreshFloorTab(_staffModalBuilding, _staffModalFloor);
   showToast('👷 ' + (removed[0]||'Staff') + ' removed');
 }
@@ -3017,6 +3121,42 @@ async function clearAllFeedback() {
 
 
 // ── ADMIN FEEDBACK VIEW ───────────────────────────────────────────────────────
+// ── STAFF NAMES BY BUILDING (own tab) ────────────────────────────────────────
+function showStaffNamesAdmin() {
+  setActiveTab('staffnames');
+  var html = '<div class="dash-header"><div class="dash-header-left">' +
+    '<h2>\u{1F477} Staff Names by Building</h2>' +
+    '<p style="color:var(--text-muted);margin-top:4px;">Manage the staff name list shown in the Assign Staff picker for each building separately.</p>' +
+    '</div></div>';
+
+  var allBldgs = Object.keys(BUILDINGS_DEFAULT);
+  allBldgs.forEach(function(bk) {
+    var bObj = BUILDINGS_DEFAULT[bk];
+    var safeKey = bk.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    var domId   = bk.replace(/\s+/g,'_');
+    html += '<div class="pwd-mgmt-card" style="margin-bottom:18px;">' +
+      '<div class="pwd-mgmt-hdr" style="background:linear-gradient(135deg,var(--teal-dark),var(--teal));">' +
+        '<h3>\u{1F3E2} ' + bObj.name + '</h3>' +
+        '<button class="btn" style="background:rgba(255,255,255,.18);color:white;border-color:rgba(255,255,255,.3);font-size:11px;padding:4px 10px;" ' +
+          'onclick="resetBldgStaffNames(\'' + safeKey + '\')">\u21A9 Reset</button>' +
+      '</div>' +
+      '<div style="padding:14px 18px;">' +
+        '<div id="staffNamesList_' + domId + '" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;min-height:36px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border);"></div>' +
+        '<div style="display:flex;gap:8px;align-items:center;">' +
+          '<input type="text" id="newStaffName_' + domId + '" placeholder="Add staff name..." maxlength="60" ' +
+            'style="flex:1;min-width:140px;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;color:var(--text);background:var(--white);outline:none;" ' +
+            'onfocus="this.style.borderColor=\'var(--teal)\'" onblur="this.style.borderColor=\'var(--border)\'" ' +
+            'onkeydown="if(event.key===\'Enter\')addBldgStaffName(\'' + safeKey + '\')">' +
+          '<button class="btn btn-p" style="font-size:12px;padding:7px 14px;" onclick="addBldgStaffName(\'' + safeKey + '\')">+ Add</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  });
+
+  document.getElementById('mainContent').innerHTML = html;
+  allBldgs.forEach(function(bk) { renderBldgStaffNamesList(bk); });
+}
+
 function showFeedbackAdmin() {
   currentView = 'feedback';
   setActiveTab('feedback');
