@@ -356,6 +356,10 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 /* FLOOR & STAFF PERFORMANCE */
 .fb-perf-section{margin-top:20px;border-top:1px solid var(--border);padding-top:18px;}
 .fb-perf-title{font-size:12px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
+.fb-perf-toggle-hdr{padding:10px 14px;background:var(--teal-pale);border-radius:10px;margin-bottom:0;transition:background .15s;}
+.fb-perf-toggle-hdr:hover{background:var(--teal-mid);}
+.fb-toggle-chevron{font-size:11px;color:var(--teal);transition:transform .2s;}
+#fbStaffPerfBody{margin-top:12px;}
 .fb-floor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
 .fb-floor-card{background:var(--bg);border-radius:10px;border:1px solid var(--border);overflow:hidden;}
 .fb-floor-card-hdr{padding:8px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;background:var(--teal-pale);color:var(--teal-dark);border-bottom:1px solid var(--border);}
@@ -601,6 +605,17 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .sup-spinner{display:flex;flex-direction:column;align-items:center;gap:12px;padding:36px;color:var(--text-muted);font-size:13px;}
 .sup-spinner-ring{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;}
 @media(max-width:640px){.sup-page{padding:14px;}.sup-add-grid{grid-template-columns:1fr;}.sup-table thead th:nth-child(4),.sup-table tbody td:nth-child(4){display:none;}}
+
+/* DATE RANGE FILTER */
+.fb-date-range-wrap{display:inline-flex;align-items:center;gap:6px;background:var(--bg);border:2px solid var(--border);border-radius:10px;padding:5px 10px;transition:border-color .2s;}
+.fb-date-range-wrap:focus-within{border-color:var(--teal);}
+.fb-date-range-icon{font-size:14px;flex-shrink:0;}
+.fb-date-input{border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;cursor:pointer;width:130px;}
+.fb-date-input::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6;}
+.fb-date-range-sep{font-size:13px;color:var(--text-muted);font-weight:600;flex-shrink:0;}
+.fb-date-clear-btn{background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-muted);padding:0 2px;line-height:1;border-radius:4px;transition:color .15s,background .15s;}
+.fb-date-clear-btn:hover{color:var(--red);background:rgba(192,57,43,.08);}
+.fb-entry-clock{display:inline-block;margin-left:6px;font-size:11px;color:var(--text-muted);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:1px 6px;font-weight:500;letter-spacing:.2px;}
 </style>
 </head>
 <body>
@@ -731,15 +746,6 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
     <div style="margin-bottom:12px;">
       <div style="font-size:11px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Select from Building Staff</div>
       <div id="staffPickerList" style="display:flex;flex-wrap:wrap;gap:7px;max-height:200px;overflow-y:auto;padding:6px;background:var(--bg);border-radius:10px;border:1px solid var(--border);min-height:40px;"></div>
-    </div>
-
-    <!-- Custom name -->
-    <div style="border-top:1px solid var(--border);padding-top:12px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Or Enter Custom Name</div>
-      <div class="staff-add-row">
-        <input type="text" id="staffModalInput" placeholder="Type a name..." maxlength="60" onkeydown="if(event.key==='Enter')addStaffFromModal()">
-        <button class="btn btn-p" onclick="addStaffFromModal()">+ Add</button>
-      </div>
     </div>
 
     <div style="margin-top:16px;display:flex;justify-content:flex-end;">
@@ -2005,7 +2011,6 @@ function openStaffModal(bk, fn) {
   document.getElementById('staffModalLoc').textContent = bk + ' — ' + fn;
   renderStaffModalChips();
   renderStaffPickerList();
-  document.getElementById('staffModalInput').value = '';
   document.getElementById('staffModal').classList.add('open');
 }
 
@@ -3805,12 +3810,13 @@ function renderFeedbackAdminHtml() {
           const starColors = {1:'#C0392B',2:'#C0392B',3:'#2980B9',4:'#D4A843',5:'#27AE60'};
           const starEmojis = {1:'😡',2:'😞',3:'😐',4:'😊',5:'😄'};
           const starLabels = {1:'Poor',2:'Bad',3:'Okay',4:'Good',5:'Excellent'};
-          return starsPct.map(sp => `<div class="fb-stat-box" style="border-top:3px solid ${starColors[sp.s]};">
+          return starsPct.map(sp => `<div class="fb-stat-box fb-star-card" data-rating="${sp.s}" style="border-top:3px solid ${starColors[sp.s]};cursor:pointer;transition:transform .15s,box-shadow .15s;" onclick="filterByStarCard(${sp.s})" title="Click to show ${starLabels[sp.s]} responses">
             <div style="font-size:22px;margin-bottom:2px;">${starEmojis[sp.s]}</div>
             <div class="fb-stat-num" style="font-size:16px;color:${starColors[sp.s]};letter-spacing:1px;">${'★'.repeat(sp.s)}${'☆'.repeat(5-sp.s)}</div>
             <div style="font-size:10px;font-weight:700;color:${starColors[sp.s]};text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">${starLabels[sp.s]}</div>
             <div class="fb-stat-num" style="font-size:20px;">${sp.cnt}</div>
             <div class="fb-stat-lbl">${sp.pct}% of total</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Click to view</div>
           </div>`).join('');
         })()}
       </div>
@@ -3820,18 +3826,23 @@ function renderFeedbackAdminHtml() {
         <div id="fbFloorPerf"></div>
       </div>
 
-      <div class="fb-perf-section">
-        <div class="fb-perf-title">👷 Staff Performance</div>
-        <div id="fbStaffPerf"></div>
+      <div class="fb-perf-section fb-perf-toggle-section" id="fbStaffPerfSection">
+        <div class="fb-perf-title fb-perf-toggle-hdr" onclick="toggleStaffPerf()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;">
+          <span>👷 Staff Performance</span>
+          <span class="fb-toggle-chevron" id="fbStaffPerfChevron">▲</span>
+        </div>
+        <div id="fbStaffPerfBody">
+          <div id="fbStaffPerf"></div>
+        </div>
       </div>
 
-      <div class="fb-filter-row" style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+      <div class="fb-filter-row" style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;flex-wrap:wrap;gap:10px;">
         <label style="font-size:12px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.5px;">Filter:</label>
         <select class="fb-filter-select" id="fbFilterBuilding" onchange="refreshFeedbackList()">
           <option value="">All Buildings</option>
           ${buildingOptions}
         </select>
-        <select class="fb-filter-select" id="fbFilterRating" onchange="refreshFeedbackList()">
+        <select class="fb-filter-select" id="fbFilterRating" onchange="document.querySelectorAll('.fb-star-card').forEach(function(c){c.style.transform='';c.style.boxShadow='';c.style.outline='';});refreshFeedbackList()">
           <option value="">All Ratings</option>
           <option value="5">★★★★★ (5)</option>
           <option value="4">★★★★ (4)</option>
@@ -3839,6 +3850,13 @@ function renderFeedbackAdminHtml() {
           <option value="2">★★ (2)</option>
           <option value="1">★ (1)</option>
         </select>
+        <div class="fb-date-range-wrap">
+          <span class="fb-date-range-icon">📅</span>
+          <input type="date" id="fbDateFrom" class="fb-date-input" title="From date" onchange="refreshFeedbackList()">
+          <span class="fb-date-range-sep">→</span>
+          <input type="date" id="fbDateTo" class="fb-date-input" title="To date" onchange="refreshFeedbackList()">
+          <button class="fb-date-clear-btn" onclick="clearDateRange()" title="Clear date filter">✕</button>
+        </div>
         <div class="fb-search-wrap">
           <span class="fb-search-icon">🔍</span>
           <input type="text" id="fbSearchInput" class="fb-search-input" placeholder="Search room, ID, comment, staff…" oninput="refreshFeedbackList()">
@@ -3849,13 +3867,80 @@ function renderFeedbackAdminHtml() {
   </div>`;
 }
 
+function clearDateRange() {
+  var from = document.getElementById('fbDateFrom');
+  var to   = document.getElementById('fbDateTo');
+  if (from) from.value = '';
+  if (to)   to.value   = '';
+  refreshFeedbackList();
+}
+
+var _staffPerfOpen = true;
+function toggleStaffPerf() {
+  _staffPerfOpen = !_staffPerfOpen;
+  var body    = document.getElementById('fbStaffPerfBody');
+  var chevron = document.getElementById('fbStaffPerfChevron');
+  if (body)    body.style.display    = _staffPerfOpen ? '' : 'none';
+  if (chevron) chevron.textContent   = _staffPerfOpen ? '▲' : '▼';
+}
+
+function filterByStarCard(rating) {
+  // Toggle: if already selected, clear filter; otherwise apply it
+  const select = document.getElementById('fbFilterRating');
+  if (!select) return;
+  const currentVal = parseInt(select.value || '0');
+  const newVal = currentVal === rating ? '' : String(rating);
+  select.value = newVal;
+
+  // Highlight active card
+  document.querySelectorAll('.fb-star-card').forEach(function(card) {
+    const cardRating = parseInt(card.dataset.rating);
+    const isActive = newVal !== '' && cardRating === rating;
+    card.style.transform = isActive ? 'translateY(-4px) scale(1.04)' : '';
+    card.style.boxShadow = isActive ? '0 8px 24px rgba(0,107,107,.22)' : '';
+    card.style.outline = isActive ? '2px solid var(--teal)' : '';
+  });
+
+  refreshFeedbackList();
+
+  // Scroll down to show the filtered entries
+  const wrap = document.getElementById('fbEntriesWrap');
+  if (wrap) {
+    setTimeout(function() { wrap.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
+  }
+}
+
 function refreshFeedbackList() {
   const filterBuilding = (document.getElementById('fbFilterBuilding') || {}).value || '';
   const filterRating   = parseInt((document.getElementById('fbFilterRating')   || {}).value || '0');
   const searchRaw      = ((document.getElementById('fbSearchInput')   || {}).value || '').trim().toLowerCase();
+  const dateFrom       = ((document.getElementById('fbDateFrom')      || {}).value || '').trim();
+  const dateTo         = ((document.getElementById('fbDateTo')        || {}).value || '').trim();
   let all = getAllFeedback();
   if (filterBuilding) all = all.filter(e => e.building === filterBuilding);
   if (filterRating)   all = all.filter(e => e.rating   === filterRating);
+  if (dateFrom || dateTo) {
+    all = all.filter(function(e) {
+      // Normalise the entry date to YYYY-MM-DD for comparison
+      var entryDate = '';
+      if (e.ts) { entryDate = e.ts.slice(0, 10); }
+      else if (e.date) {
+        // e.date may be in DD/MM/YYYY (Indian locale) — convert to YYYY-MM-DD
+        var parts = e.date.split('/');
+        if (parts.length === 3) entryDate = parts[2] + '-' + parts[1].padStart(2,'0') + '-' + parts[0].padStart(2,'0');
+        else entryDate = e.date;
+      }
+      if (!entryDate) return true;
+      if (dateFrom && entryDate < dateFrom) return false;
+      if (dateTo   && entryDate > dateTo)   return false;
+      return true;
+    });
+  }
+
+  // Update clear button visibility
+  var clearBtn = document.getElementById('fbDateClearBtn');
+  // (inline button handles its own visibility via DOM)
+
   if (searchRaw) all = all.filter(e =>
     (e.roomNo   || '').toLowerCase().includes(searchRaw) ||
     (e.userId   || '').toLowerCase().includes(searchRaw) ||
@@ -3996,11 +4081,20 @@ function refreshFeedbackList() {
       : '';
     const _eStarColor = e.rating <= 2 ? '#C0392B' : e.rating === 3 ? '#2980B9' : e.rating === 4 ? '#D4A843' : '#27AE60';
     const _eStarEmoji = {1:'😡',2:'😞',3:'😐',4:'😊',5:'😄'}[e.rating] || '';
+    // Format time from ISO timestamp
+    const _eTimeStr = (function() {
+      if (!e.ts) return '';
+      try {
+        const d = new Date(e.ts);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+      } catch(err) { return ''; }
+    })();
     return `<div class="fb-entry">
       <div class="fb-entry-hdr">
         <span class="fb-entry-loc">${e.building} — ${e.floor}</span>
         <span class="fb-entry-stars" style="color:${_eStarColor}">${'★'.repeat(e.rating)}${'☆'.repeat(5-e.rating)} ${_eStarEmoji}</span>
-        <span class="fb-entry-time">${e.date || e.ts.slice(0,10)}</span>
+        <span class="fb-entry-time">${e.date || e.ts.slice(0,10)}${_eTimeStr ? '<span class="fb-entry-clock">🕐 ' + _eTimeStr + '</span>' : ''}</span>
       </div>
       ${metaHtml}${staffHtml}${commentHtml}
     </div>`;
