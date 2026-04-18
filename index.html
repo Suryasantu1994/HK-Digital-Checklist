@@ -92,6 +92,33 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .btn-logout{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;padding:7px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:background .2s;}
 .btn-logout:hover{background:rgba(255,255,255,.25);}
 
+/* ── LOW-RATING NOTIFICATION ── */
+.notif-btn{position:relative;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;flex-shrink:0;}
+.notif-btn:hover{background:rgba(255,255,255,.28);}
+.notif-badge{position:absolute;top:-4px;right:-4px;background:#C0392B;color:white;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--teal-dark);animation:notifPop .3s ease;}
+@keyframes notifPop{0%{transform:scale(0);}70%{transform:scale(1.25);}100%{transform:scale(1);}}
+.notif-panel{position:fixed;top:80px;right:20px;width:360px;max-width:95vw;background:white;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.22);z-index:500;display:none;overflow:hidden;border:1px solid var(--border);animation:slideDown .2s ease;}
+.notif-panel.open{display:block;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+.notif-panel-hdr{background:linear-gradient(135deg,#8B0000,#C0392B);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+.notif-panel-hdr h3{font-family:"Playfair Display",serif;font-size:15px;color:white;font-weight:700;}
+.notif-panel-hdr-right{display:flex;align-items:center;gap:8px;}
+.notif-close-btn{background:rgba(255,255,255,.2);border:none;color:white;width:26px;height:26px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.notif-close-btn:hover{background:rgba(255,255,255,.35);}
+.notif-clear-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;font-size:11px;font-weight:600;padding:3px 10px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.notif-clear-btn:hover{background:rgba(255,255,255,.28);}
+.notif-list{max-height:360px;overflow-y:auto;}
+.notif-item{padding:12px 16px;border-bottom:1px solid var(--bg);display:flex;align-items:flex-start;gap:10px;transition:background .15s;}
+.notif-item:hover{background:var(--bg);}
+.notif-item:last-child{border-bottom:none;}
+.notif-star{font-size:20px;flex-shrink:0;line-height:1.2;}
+.notif-info{flex:1;min-width:0;}
+.notif-rating-line{font-size:13px;font-weight:700;color:#C0392B;}
+.notif-loc{font-size:12px;color:var(--text-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.notif-comment{font-size:12px;color:var(--text);margin-top:3px;font-style:italic;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.notif-time{font-size:10px;color:var(--text-muted);margin-top:3px;}
+.notif-empty{padding:24px;text-align:center;color:var(--text-muted);font-size:13px;}
+
 /* NAV */
 .nav-tabs{background:var(--white);border-bottom:2px solid var(--border);padding:0 32px;display:flex;gap:0;overflow-x:auto;scrollbar-width:none;}
 .nav-tabs::-webkit-scrollbar{display:none;}
@@ -362,7 +389,13 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 #fbStaffPerfBody{margin-top:12px;}
 .fb-floor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
 .fb-floor-card{background:var(--bg);border-radius:10px;border:1px solid var(--border);overflow:hidden;}
-.fb-floor-card-hdr{padding:8px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;background:var(--teal-pale);color:var(--teal-dark);border-bottom:1px solid var(--border);}
+.fb-floor-card-hdr{padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;background:linear-gradient(135deg,var(--teal-dark),var(--teal));color:#fff;border-bottom:1px solid var(--border);}
+.fb-rating-breakdown{padding:8px 14px;background:var(--teal-pale);border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:4px;}
+.fb-rbd-row{display:flex;align-items:center;gap:6px;font-size:11px;}
+.fb-rbd-label{width:22px;font-weight:700;text-align:right;flex-shrink:0;}
+.fb-rbd-bar-wrap{flex:1;background:rgba(0,0,0,.08);border-radius:100px;height:7px;overflow:hidden;}
+.fb-rbd-bar{height:100%;border-radius:100px;transition:width .4s ease;}
+.fb-rbd-count{width:28px;text-align:right;color:var(--text-muted);flex-shrink:0;}
 .fb-floor-row{display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);gap:8px;}
 .fb-floor-row:last-child{border-bottom:none;}
 .fb-floor-info{flex:1;min-width:0;}
@@ -616,6 +649,15 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .fb-date-clear-btn{background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-muted);padding:0 2px;line-height:1;border-radius:4px;transition:color .15s,background .15s;}
 .fb-date-clear-btn:hover{color:var(--red);background:rgba(192,57,43,.08);}
 .fb-entry-clock{display:inline-block;margin-left:6px;font-size:11px;color:var(--text-muted);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:1px 6px;font-weight:500;letter-spacing:.2px;}
+
+/* ── STAR RATING BREAKDOWN (inside floor-wise building cards) ── */
+.fb-rating-breakdown{padding:10px 16px 6px;background:rgba(0,107,107,.04);border-bottom:1px solid rgba(0,107,107,.1);}
+.fb-rbd-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.fb-rbd-row:last-child{margin-bottom:0;}
+.fb-rbd-label{font-size:11px;font-weight:700;min-width:26px;text-align:right;}
+.fb-rbd-bar-wrap{flex:1;height:8px;background:rgba(0,107,107,.1);border-radius:100px;overflow:hidden;}
+.fb-rbd-bar{height:100%;border-radius:100px;transition:width .4s ease;}
+.fb-rbd-count{font-size:11px;color:var(--text-muted);min-width:56px;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -662,12 +704,26 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
     </div>
     <div class="header-right">
       <div class="user-badge" id="userLabel"></div>
+      <button class="notif-btn" id="notifBtn" onclick="toggleNotifPanel()" title="Low-rating alerts" style="display:none;">
+        🔔<span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+      </button>
       <button class="btn-logout" onclick="doLogout()">Sign Out</button>
     </div>
   </div>
   <div class="nav-tabs" id="navTabs"></div>
   <div class="content" id="mainContent"></div>
-</div>
+
+  <!-- NOTIFICATION PANEL -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-panel-hdr">
+      <h3>🔴 Low Rating Alerts</h3>
+      <div class="notif-panel-hdr-right">
+        <button class="notif-clear-btn" onclick="clearNotifications()">✓ Clear All</button>
+        <button class="notif-close-btn" onclick="toggleNotifPanel()">✕</button>
+      </div>
+    </div>
+    <div class="notif-list" id="notifList"></div>
+  </div>
 
 <!-- ADMIN ADD TASK MODAL -->
 <div class="modal-overlay" id="adminModal">
@@ -1168,6 +1224,7 @@ async function doLogin() {
   document.getElementById('mainApp').style.display = 'flex';
   document.getElementById('userLabel').textContent = user.label;
   await buildNav();
+  initNotifications();
   showDashboard();
 }
 
@@ -1373,14 +1430,13 @@ async function buildNav() {
   for (const bk of currentUser.access) {
     html += `<button class="nav-tab" id="tab-${encodeKey(bk)}" onclick="showBuilding('${esc(bk)}')">${bk}</button>`;
   }
-  html += `<button class="nav-tab" id="tab-supervisors" onclick="showSupervisorAllocation()">👷 Supervisors</button>`;
+  const fbCount = getAllFeedback().length;
+  const fbBadge = fbCount > 0 ? ` <span style="background:#7C3AED;color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;margin-left:4px;">${fbCount}</span>` : '';
+  html += `<button class="nav-tab" id="tab-feedback" onclick="showFeedbackAdmin()">⭐ Feedback${fbBadge}</button>`;
   if (currentUser.role === 'admin') {
+    html += `<button class="nav-tab" id="tab-supervisors" onclick="showSupervisorAllocation()">👷 Supervisors</button>`;
     html += `<button class="nav-tab" id="tab-passwords" onclick="showPasswordManagement()">🔐 Passwords</button>`;
-    const fbCount = getAllFeedback().length;
-    const fbBadge = fbCount > 0 ? ` <span style="background:#7C3AED;color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;margin-left:4px;">${fbCount}</span>` : '';
-    html += `<button class="nav-tab" id="tab-feedback" onclick="showFeedbackAdmin()">⭐ Feedback${fbBadge}</button>`;
     html += `<button class="nav-tab" id="tab-staffnames" onclick="showStaffNamesAdmin()">👷 Staff Names</button>`;
-
   }
   nav.innerHTML = html;
 }
@@ -1443,6 +1499,10 @@ function dateStripHtml(context) {
 
 function changeDate(val, context) {
   viewingDate = val;
+  // Pre-load supervisor allocation for the newly selected date
+  const [y, m, d] = val.split('-').map(Number);
+  const asDate = new Date(y, m - 1, d);
+  supLoadData(asDate);
   if(currentView === 'dashboard') showDashboard();
   else if(currentView === 'building') renderBuildingView();
 }
@@ -1452,6 +1512,9 @@ async function showDashboard() {
   currentView = 'dashboard';
   currentBuilding = null;
   setActiveTab('dashboard');
+  // Ensure supervisor data for the viewing date is in cache
+  const [y, mo, d] = viewingDate.split('-').map(Number);
+  supLoadData(new Date(y, mo - 1, d));
   // Sync all buildings from Firestore in background then re-render
   if (_getDb()) {
     (async function() {
@@ -3187,50 +3250,112 @@ function showFeedbackAdmin() {
 }
 
 // ── SUPERVISOR ALLOCATION ─────────────────────────────────────────────────────
-const SUP_LS_KEY = 'gitam_supervisors_v1';
-const SUP_FS_DOC = 'supervisor_allocation';
+const SUP_LS_KEY_PREFIX = 'gitam_supervisors_v2_';   // + YYYY-MM-DD
+const SUP_FS_DOC_PREFIX  = 'supervisor_allocation_'; // + YYYY-MM-DD
 const SUP_DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-// Supervisor data — loaded from Firestore/localStorage
-let supData = [
-  { locations: ['SHIVAJI BHAVAN'],                                   supervisor: 'Muniyappa',  time: '07:00', weekOff: ['Sun'] },
-  { locations: ['VISVESVARAYA BHAVAN'],                              supervisor: 'Prema',      time: '07:00', weekOff: ['Sun'] },
-  { locations: ['VINAY SADAN', 'KOKILA SADAN', 'STAFF QUARTERS'],   supervisor: 'Satish',     time: '09:00', weekOff: ['Sun'] },
-  { locations: ['SOUTH GIRLS HOSTEL'],                               supervisor: 'Lakshmi',    time: '09:00', weekOff: ['Sun'] },
-  { locations: ['NORTH BOYS HOSTEL'],                                supervisor: 'Vinod',      time: '08:00', weekOff: ['Sun'] },
-  { locations: ['SECOND SHIFT'],                                     supervisor: 'Rangaswamy', time: '13:00', weekOff: ['Sun'] },
-];
+// Helper: turn a Date into the YYYY-MM-DD key string (LOCAL date, not UTC)
+function supDateKey(d) {
+  const dt = d || supViewDate;
+  const y  = dt.getFullYear();
+  const mo = String(dt.getMonth() + 1).padStart(2, '0');
+  const dy = String(dt.getDate()).padStart(2, '0');
+  return `${y}-${mo}-${dy}`;
+}
+function supLsKey(d)  { return SUP_LS_KEY_PREFIX + supDateKey(d); }
+function supFsDoc(d)  { return SUP_FS_DOC_PREFIX  + supDateKey(d); }
+
+// In-memory cache keyed by date string so switching dates doesn't reload unnecessarily
+const _supCache = {};
+
+// supData holds the rows for the currently-viewed date (supViewDate)
+let supData = [];
 let supDeleteIdx   = null;
 let supShareImgUrl = null;
 let supPickerState = { add: [], edit: [] };
 let supWeekOff     = { add: [], edit: [] };
 let supViewDate    = new Date();
 
-// Load saved data from localStorage then Firestore
-function supLoadData() {
+// Load saved data for the given date (defaults to supViewDate)
+function supLoadData(targetDate) {
+  const dk  = supDateKey(targetDate);
+  const lsk = supLsKey(targetDate);
+  const fsd = supFsDoc(targetDate);
+
+  // Seed from localStorage into cache
   try {
-    const saved = localStorage.getItem(SUP_LS_KEY);
-    if (saved) supData = JSON.parse(saved);
+    const saved = localStorage.getItem(lsk);
+    if (saved) _supCache[dk] = JSON.parse(saved);
   } catch(e) {}
+
+  // Apply cache to supData immediately if loading for the current view-date
+  if (!targetDate || dk === supDateKey()) {
+    supData = _supCache[dk] ? JSON.parse(JSON.stringify(_supCache[dk])) : [];
+  }
+
+  // Then fetch from Firestore and update
   const db = _getDb();
   if (db) {
-    db.collection('supervisor').doc(SUP_FS_DOC).get().then(snap => {
+    db.collection('supervisor').doc(fsd).get().then(snap => {
       if (snap.exists && snap.data().rows) {
-        supData = snap.data().rows;
-        localStorage.setItem(SUP_LS_KEY, JSON.stringify(supData));
-        if (currentView === 'supervisors') supRenderTable();
+        const rows = snap.data().rows;
+        _supCache[dk] = rows;
+        localStorage.setItem(lsk, JSON.stringify(rows));
+        // Only refresh the visible table if still on that date
+        if (supDateKey() === dk) {
+          supData = JSON.parse(JSON.stringify(rows));
+          if (currentView === 'supervisors') supRenderTable();
+        }
       }
     }).catch(() => {});
   }
 }
 
+// Save supData for the currently-viewed supervisor date
 function supSaveData() {
-  localStorage.setItem(SUP_LS_KEY, JSON.stringify(supData));
+  const dk  = supDateKey();
+  const lsk = supLsKey();
+  const fsd = supFsDoc();
+  _supCache[dk] = JSON.parse(JSON.stringify(supData));
+  localStorage.setItem(lsk, JSON.stringify(supData));
   const db = _getDb();
   if (db) {
-    db.collection('supervisor').doc(SUP_FS_DOC).set({ rows: supData })
+    db.collection('supervisor').doc(fsd).set({ rows: supData, date: dk })
       .catch(e => console.warn('Supervisor save failed', e));
   }
+}
+
+// Return supervisor rows for a building on a specific date (used by dashboard & building view).
+// forDate may be a JS Date object OR a YYYY-MM-DD string (matches viewingDate format).
+function getSupForBuildingOnDate(bk, forDate) {
+  const b = getBuildings()[bk];
+  if (!b) return [];
+  const bName = b.name.toUpperCase();
+
+  // Normalise forDate to a JS Date so we can derive both the key and the weekday
+  let dt;
+  if (!forDate) {
+    dt = new Date();
+  } else if (typeof forDate === 'string') {
+    // YYYY-MM-DD string — parse as local date to avoid UTC-shift bugs
+    const [y, mo, d] = forDate.split('-').map(Number);
+    dt = new Date(y, mo - 1, d);
+  } else {
+    dt = forDate;
+  }
+
+  const dk = supDateKey(dt);
+  const rows = _supCache[dk] || [];
+  const viewDay = SUP_DAYS[dt.getDay()];
+  const result = [];
+  rows.forEach(row => {
+    const locs = (row.locations || []).map(l => l.toUpperCase());
+    if (locs.includes(bName)) {
+      const isOff = (row.weekOff || []).includes(viewDay);
+      result.push({ supervisor: row.supervisor, time: row.time, isOff });
+    }
+  });
+  return result;
 }
 
 function supGetBuildingList() {
@@ -3242,22 +3367,10 @@ function supGetBuildingList() {
   return names;
 }
 
-// Returns assigned supervisors for a given building key (for today's date).
-// Respects week-off — returns empty array if all supervisors for that building are off.
+// Legacy alias — kept for any internal call-sites that don't pass a date.
+// Dashboard cards and building view use getSupForBuildingOnDate(bk, viewingDate) instead.
 function getSupForBuilding(bk) {
-  const b = getBuildings()[bk];
-  if (!b) return [];
-  const bName = b.name.toUpperCase();
-  const todayDay = supTodayDay();
-  const result = [];
-  supData.forEach(row => {
-    const locs = (row.locations || []).map(l => l.toUpperCase());
-    if (locs.includes(bName)) {
-      const isOff = (row.weekOff || []).includes(todayDay);
-      result.push({ supervisor: row.supervisor, time: row.time, isOff });
-    }
-  });
-  return result;
+  return getSupForBuildingOnDate(bk, viewingDate);
 }
 
 function supTodayDay(d) { return SUP_DAYS[(d || supViewDate).getDay()]; }
@@ -3273,16 +3386,19 @@ function supFmt12(timeStr) {
 function showSupervisorAllocation() {
   currentView = 'supervisors';
   setActiveTab('supervisors');
-  supLoadData();
+  supLoadData(supViewDate);
   const isAdmin = currentUser && currentUser.role === 'admin';
   const dateStr = supViewDate.toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' });
 
   document.getElementById('mainContent').innerHTML = `
   <div class="sup-page">
     <div class="sup-toolbar">
-      <div class="sup-toolbar-title">👷 Supervisor Allocation</div>
+      <div>
+        <div class="sup-toolbar-title">👷 Supervisor Allocation</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">📅 Allocation for: <strong style="color:var(--teal-dark);">${dateStr}</strong></div>
+      </div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <input type="date" id="supDatePicker" value="${supViewDate.toISOString().slice(0,10)}"
+        <input type="date" id="supDatePicker" value="${supDateKey(supViewDate)}"
           style="padding:7px 12px;border:2px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--white);cursor:pointer;outline:none;"
           onchange="supOnDateChange(this.value)">
         ${isAdmin ? `<button class="btn btn-s" onclick="supOpenAdd()">＋ Add Entry</button>` : ''}
@@ -3292,7 +3408,7 @@ function showSupervisorAllocation() {
     </div>
 
     <div id="supCoverage" class="sup-coverage">
-      <div class="sup-coverage-hdr">⚠️ Unassigned Buildings Today
+      <div class="sup-coverage-hdr">⚠️ Supervisors on Week Off — ${dateStr}
         <span id="supCoverageCount"></span>
       </div>
       <div class="sup-coverage-body" id="supCoverageBody"></div>
@@ -3423,6 +3539,8 @@ function supOnDateChange(val) {
   if (!val) return;
   const [y, m, d] = val.split('-').map(Number);
   supViewDate = new Date(y, m - 1, d);
+  // Load data for the selected date (will pull from cache or Firestore)
+  supLoadData(supViewDate);
   supRenderTable();
 }
 
@@ -3430,7 +3548,7 @@ function supRenderTable() {
   const tbody = document.getElementById('supTableBody');
   if (!tbody) return;
   const isAdmin = currentUser && currentUser.role === 'admin';
-  const todayDay = supTodayDay();
+  const todayDay = supTodayDay(supViewDate);   // day for the selected date, not necessarily today
   const offRows = [];
   tbody.innerHTML = '';
 
@@ -3596,7 +3714,7 @@ function supAddRow() {
   supSaveData();
   supCloseAdd();
   supRenderTable();
-  showToast('✅ Entry added!');
+  showToast('✅ Entry added for ' + supViewDate.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) + '!');
 }
 
 // ── Edit ──────────────────────────────────────────────────────────────────────
@@ -3624,7 +3742,7 @@ function supSaveEdit() {
   supSaveData();
   supCloseEdit();
   supRenderTable();
-  showToast('✅ Entry updated!');
+  showToast('✅ Entry updated for ' + supViewDate.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) + '!');
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
@@ -3646,7 +3764,7 @@ function supExportCSV() {
   const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `Supervisor_Allocation_${supViewDate.toISOString().slice(0,10)}.csv`;
+  a.download = `Supervisor_Allocation_${supDateKey(supViewDate)}.csv`;
   a.click();
   showToast('📥 CSV exported!');
 }
@@ -3662,7 +3780,7 @@ function supOpenShare() {
 
   // Load html2canvas on demand
   function generateImage() {
-    const todayDay = supTodayDay();
+    const todayDay = supTodayDay(supViewDate);
     const wrapper = document.createElement('div');
     wrapper.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:860px;background:#fff;font-family:"DM Sans",sans-serif;';
     const logoSrc = document.querySelector('.header-logo img')?.src || '';
@@ -3743,7 +3861,7 @@ function supDataURLtoBlob(dataUrl) {
 
 async function supShareWhatsApp() {
   if (!supShareImgUrl) return;
-  const fileName = `GITAM_Supervisor_Allocation_${supViewDate.toISOString().slice(0,10)}.png`;
+  const fileName = `GITAM_Supervisor_Allocation_${supDateKey(supViewDate)}.png`;
   const file = new File([supDataURLtoBlob(supShareImgUrl)], fileName, { type:'image/png' });
   const dateStr = supViewDate.toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' });
   if (navigator.canShare && navigator.canShare({ files:[file] })) {
@@ -3758,7 +3876,7 @@ function supDownloadImg() {
   if (!supShareImgUrl) return;
   const a = document.createElement('a');
   a.href = supShareImgUrl;
-  a.download = `GITAM_Supervisor_Allocation_${supViewDate.toISOString().slice(0,10)}.png`;
+  a.download = `GITAM_Supervisor_Allocation_${supDateKey(supViewDate)}.png`;
   a.click();
 }
 
@@ -3972,12 +4090,58 @@ function refreshFeedbackList() {
         Object.keys(byBuilding).sort().map(function(bk) {
           var floors = byBuilding[bk];
           var sortedFloors = Object.keys(floors).slice().sort(function(a, b) {
-            var avgA = floors[a].ratings.reduce(function(x,y){return x+y;},0) / floors[a].ratings.length;
-            var avgB = floors[b].ratings.reduce(function(x,y){return x+y;},0) / floors[b].ratings.length;
-            return avgA - avgB; // lowest avg first → needs attention at top
+            // Natural sequence sort: handles "Ground Floor", "1st Floor", "2nd Floor", etc.
+            var numA = parseInt(a.match(/\d+/) || [-1]);
+            var numB = parseInt(b.match(/\d+/) || [-1]);
+            var aIsGround = /ground/i.test(a);
+            var bIsGround = /ground/i.test(b);
+            // Ground floor always first, then numeric order, then alphabetic
+            if (aIsGround && !bIsGround) return -1;
+            if (!aIsGround && bIsGround) return 1;
+            if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+            return a.localeCompare(b);
           });
+          // ── Building-level summary ──────────────────────────────────────
+          var bldgAllRatings = Object.keys(floors).reduce(function(acc, fn) {
+            return acc.concat(floors[fn].ratings);
+          }, []);
+          var bldgTotal = bldgAllRatings.length;
+          var bldgAvg   = bldgTotal ? bldgAllRatings.reduce(function(a,b){return a+b;},0) / bldgTotal : 0;
+          var bldgAvgStr = bldgTotal ? bldgAvg.toFixed(1) : '—';
+          var bldgRounded = Math.round(bldgAvg);
+          var bldgStars   = bldgTotal ? ('★'.repeat(bldgRounded) + '☆'.repeat(5 - bldgRounded)) : '—';
+          var bldgEmoji   = bldgAvg >= 4.5 ? '😄' : bldgAvg >= 3.5 ? '😊' : bldgAvg >= 2.5 ? '😐' : bldgAvg >= 1.5 ? '😞' : bldgAvg > 0 ? '😡' : '';
+          var bldgStarColor = {1:'#C0392B',2:'#C0392B',3:'#2980B9',4:'#D4A843',5:'#27AE60'}[bldgRounded] || '#5A7070';
+          // ── Per-star breakdown for this building ────────────────────────
+          var bldgStarCounts = {1:0,2:0,3:0,4:0,5:0};
+          bldgAllRatings.forEach(function(r){ if(bldgStarCounts[r]!==undefined) bldgStarCounts[r]++; });
+          var starBarColors = {5:'#27AE60',4:'#D4A843',3:'#2980B9',2:'#E67E22',1:'#C0392B'};
+          var starBreakdownHtml = bldgTotal ? (
+            '<div class="fb-rating-breakdown">' +
+            [5,4,3,2,1].map(function(s) {
+              var cnt = bldgStarCounts[s];
+              var pct = Math.round((cnt / bldgTotal) * 100);
+              var col = starBarColors[s];
+              return '<div class="fb-rbd-row">' +
+                '<span class="fb-rbd-label" style="color:' + col + ';">' + s + '★</span>' +
+                '<div class="fb-rbd-bar-wrap"><div class="fb-rbd-bar" style="width:' + pct + '%;background:' + col + ';"></div></div>' +
+                '<span class="fb-rbd-count">' + cnt + ' <span style="opacity:.6;">(' + pct + '%)</span></span>' +
+              '</div>';
+            }).join('') +
+            '</div>'
+          ) : '';
           return '<div class="fb-floor-card">' +
-            '<div class="fb-floor-card-hdr">' + bk + '</div>' +
+            '<div class="fb-floor-card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">' +
+              '<span style="font-weight:700;">' + bk + '</span>' +
+              (bldgTotal ? (
+                '<span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+                  '<span style="color:' + bldgStarColor + ';font-size:13px;letter-spacing:1px;" title="Star rating">' + bldgStars + '</span>' +
+                  '<span style="background:rgba(255,255,255,0.25);border-radius:20px;padding:2px 10px;font-size:13px;font-weight:700;color:#fff;" title="Average rating">' + bldgAvgStr + '★ ' + bldgEmoji + '</span>' +
+                  '<span style="background:rgba(255,255,255,0.15);border-radius:20px;padding:2px 10px;font-size:12px;color:rgba(255,255,255,0.9);" title="Total responses">💬 ' + bldgTotal + ' resp</span>' +
+                '</span>'
+              ) : '') +
+            '</div>' +
+            starBreakdownHtml +
             sortedFloors.map(function(fn) {
               var d    = floors[fn];
               var sum  = d.ratings.reduce(function(x,y){return x+y;},0);
@@ -4179,8 +4343,177 @@ function closeStaffDetail() {
 }
 
 
-(function() {
-  window.addEventListener('DOMContentLoaded', async () => {
+// ── LOW-RATING NOTIFICATION SYSTEM ───────────────────────────────────────────
+const NOTIF_LS_KEY  = 'gitam_notif_seen_ids';   // set of Firestore doc IDs already acknowledged
+const NOTIF_LS_DATA = 'gitam_notif_alerts';      // cached alert entries list
+let _notifUnsubscribe = null;                     // Firestore onSnapshot unsubscribe handle
+
+// IDs of feedback docs the current session has already seen/cleared
+function _getSeenIds() {
+  try { return new Set(JSON.parse(localStorage.getItem(NOTIF_LS_KEY) || '[]')); } catch { return new Set(); }
+}
+function _saveSeenIds(set) {
+  localStorage.setItem(NOTIF_LS_KEY, JSON.stringify([...set]));
+}
+
+// Pending alert entries (low rating, unseen)
+function _getAlerts() {
+  try { return JSON.parse(localStorage.getItem(NOTIF_LS_DATA) || '[]'); } catch { return []; }
+}
+function _saveAlerts(arr) {
+  localStorage.setItem(NOTIF_LS_DATA, JSON.stringify(arr));
+}
+
+function initNotifications() {
+  // Show bell for all logged-in users
+  const btn = document.getElementById('notifBtn');
+  if (btn) btn.style.display = 'flex';
+
+  // Restore any cached alerts from localStorage immediately
+  _renderNotifPanel();
+  _updateNotifBadge();
+
+  // Start live Firestore listener for new 1★ / 2★ entries
+  const db = _getDb();
+  if (!db) return;
+
+  // Unsubscribe previous listener if any (e.g. after re-login)
+  if (_notifUnsubscribe) { try { _notifUnsubscribe(); } catch(e) {} }
+
+  // Listen to feedback docs with rating ≤ 2, ordered by timestamp desc
+  _notifUnsubscribe = db.collection('feedback')
+    .where('rating', '<=', 2)
+    .orderBy('rating')
+    .orderBy('ts', 'desc')
+    .onSnapshot(function(qs) {
+      const seenIds  = _getSeenIds();
+      const existing = _getAlerts();
+      const existingIds = new Set(existing.map(function(a){ return a._id; }));
+
+      var hasNew = false;
+      qs.docs.forEach(function(doc) {
+        const id = doc.id;
+        if (seenIds.has(id) || existingIds.has(id)) return; // already cleared or cached
+        const data = Object.assign({}, doc.data(), { _id: id });
+        existing.unshift(data); // newest first
+        hasNew = true;
+      });
+
+      if (hasNew) {
+        _saveAlerts(existing);
+        _renderNotifPanel();
+        _updateNotifBadge();
+        // Subtle shake animation on the bell
+        const btn = document.getElementById('notifBtn');
+        if (btn) {
+          btn.style.animation = 'none';
+          setTimeout(function(){ btn.style.animation = 'notifShake .5s ease'; }, 10);
+        }
+      }
+    }, function(err) { console.warn('Notif listener error:', err); });
+}
+
+function _updateNotifBadge() {
+  const seenIds = _getSeenIds();
+  const alerts  = _getAlerts().filter(function(a){ return !seenIds.has(a._id); });
+  const badge   = document.getElementById('notifBadge');
+  const btn     = document.getElementById('notifBtn');
+  if (!badge || !btn) return;
+  if (alerts.length) {
+    badge.textContent = alerts.length > 99 ? '99+' : String(alerts.length);
+    badge.style.display = 'flex';
+    btn.title = alerts.length + ' unread low-rating alert' + (alerts.length > 1 ? 's' : '');
+  } else {
+    badge.style.display = 'none';
+    btn.title = 'Low-rating alerts';
+  }
+}
+
+function _renderNotifPanel() {
+  const list    = document.getElementById('notifList');
+  if (!list) return;
+  const seenIds = _getSeenIds();
+  const alerts  = _getAlerts().filter(function(a){ return !seenIds.has(a._id); });
+
+  if (!alerts.length) {
+    list.innerHTML = '<div class="notif-empty">✅ No low-rating alerts</div>';
+    return;
+  }
+
+  const starEmojiMap = {1:'😡',2:'😞'};
+  const ratingLabel  = {1:'1 Star — Poor',2:'2 Stars — Fair'};
+
+  list.innerHTML = alerts.map(function(a) {
+    var timeStr = '';
+    if (a.ts) {
+      var d = new Date(a.ts);
+      timeStr = d.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) +
+                ' · ' + d.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+    } else if (a.date) {
+      timeStr = a.date;
+    }
+    var loc = [a.building, a.floor].filter(Boolean).join(' — ');
+    var staffStr = (a.staff && a.staff.length) ? '👷 ' + a.staff.join(', ') : '';
+    var comment  = (a.comment || '').trim();
+    var safe_id  = (a._id || '').replace(/'/g, "\\'");
+    return '<div class="notif-item">' +
+      '<div class="notif-star">' + (starEmojiMap[a.rating] || '⚠️') + '</div>' +
+      '<div class="notif-info">' +
+        '<div class="notif-rating-line">' + (ratingLabel[a.rating] || a.rating + '★') + ' — Room ' + (a.roomNo || '?') + '</div>' +
+        '<div class="notif-loc">' + loc + (staffStr ? ' · ' + staffStr : '') + '</div>' +
+        (comment ? '<div class="notif-comment">"' + comment + '"</div>' : '') +
+        '<div class="notif-time">' + timeStr + (a.userName ? ' · ' + a.userName : '') + '</div>' +
+      '</div>' +
+      '<button onclick="dismissNotif(\'' + safe_id + '\')" title="Dismiss" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;flex-shrink:0;line-height:1;padding:0 0 0 4px;" onmouseover="this.style.color=\'#C0392B\'" onmouseout="this.style.color=\'var(--text-muted)\'">✕</button>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notifPanel');
+  if (!panel) return;
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    _renderNotifPanel();
+    _updateNotifBadge();
+  }
+}
+
+function dismissNotif(id) {
+  const seenIds = _getSeenIds();
+  seenIds.add(id);
+  _saveSeenIds(seenIds);
+  _renderNotifPanel();
+  _updateNotifBadge();
+}
+
+function clearNotifications() {
+  const alerts  = _getAlerts();
+  const seenIds = _getSeenIds();
+  alerts.forEach(function(a){ if (a._id) seenIds.add(a._id); });
+  _saveSeenIds(seenIds);
+  _renderNotifPanel();
+  _updateNotifBadge();
+  showToast('✅ Notifications cleared');
+}
+
+// Close panel when clicking outside
+document.addEventListener('click', function(e) {
+  const panel = document.getElementById('notifPanel');
+  const btn   = document.getElementById('notifBtn');
+  if (!panel || !btn) return;
+  if (panel.classList.contains('open') && !panel.contains(e.target) && !btn.contains(e.target)) {
+    panel.classList.remove('open');
+  }
+});
+
+// Bell shake animation
+const _notifShakeStyle = document.createElement('style');
+_notifShakeStyle.textContent = '@keyframes notifShake{0%,100%{transform:rotate(0);}20%{transform:rotate(-15deg);}40%{transform:rotate(15deg);}60%{transform:rotate(-10deg);}80%{transform:rotate(10deg);}}';
+document.head.appendChild(_notifShakeStyle);
+
+// ── APP STARTUP ───────────────────────────────────────────────────────────────
+window.addEventListener('load', async function() {
     // If this is a feedback/QR scan URL, show the page immediately — no Firestore wait needed to render the form
     if (new URLSearchParams(window.location.search).get('feedback') === '1') {
       initFeedbackPage();
@@ -4190,7 +4523,7 @@ function closeStaffDetail() {
     // Normal app startup — pre-load Firestore data
     try { await Promise.race([loadCustomTasksFromFirestore(), new Promise(r=>setTimeout(r,4000))]); } catch(e){}
     try { await Promise.race([loadFeedbackFromFirestore(),    new Promise(r=>setTimeout(r,4000))]); } catch(e){}
-    supLoadData();
+    supLoadData(supViewDate);
 
     // ── Restore session after browser refresh ──────────────────────────────
     const savedId = sessionStorage.getItem('gitam_session_user');
@@ -4202,10 +4535,10 @@ function closeStaffDetail() {
       document.getElementById('mainApp').style.display = 'flex';
       document.getElementById('userLabel').textContent = user.label;
       await buildNav();
+      initNotifications();
       showDashboard();
     }
-  });
-})();
+});
 
 </script>
 
