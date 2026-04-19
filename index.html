@@ -1470,6 +1470,34 @@ function getExtraProgress(bk, date) {
   }
   return {total, done, pct: total ? Math.round(done/total*100) : 0};
 }
+
+// Month-aware extra progress: tasks on-track vs expected frequency
+function getExtraProgressMonth(bk, date) {
+  const b = getBuildings()[bk];
+  const viewMonth  = (date || todayKey()).slice(0,7);
+  const today      = todayKey();
+  const [my, mm]   = viewMonth.split('-').map(Number);
+  const totalDays  = new Date(my, mm, 0).getDate();
+  const monthDays  = [];
+  for (let d = 1; d <= totalDays; d++) monthDays.push(viewMonth + '-' + String(d).padStart(2,'0'));
+  const elapsedDays = monthDays.filter(d => d <= today).length || 1;
+  const weeksElapsed   = Math.max(1, Math.floor(elapsedDays / 7));
+  const period1Done    = elapsedDays >= 15;
+  const period2Done    = elapsedDays >= totalDays;
+  const periodsElapsed = (period1Done ? 1 : 0) + (period2Done ? 1 : 0) || 1;
+  const catExpected    = { weekly: weeksElapsed, fifteen_days: periodsElapsed, monthly: 1 };
+  let tasksMet = 0, tasksTotal = 0;
+  for (const [cat, items] of Object.entries(b.extra)) {
+    if (cat === 'outer_areas') continue;
+    const exp = catExpected[cat] || 1;
+    for (let i = 0; i < items.length; i++) {
+      const count = monthDays.filter(d => !!getChecked(bk, '_extra_' + cat, d)[i]).length;
+      if (count >= exp) tasksMet++;
+      tasksTotal++;
+    }
+  }
+  return { tasksMet, tasksTotal, pct: tasksTotal ? Math.round(tasksMet / tasksTotal * 100) : 0 };
+}
 function getOuterProgress(bk, date) {
   const b = getBuildings()[bk];
   const items = (b.extra && b.extra.outer_areas) || [];
@@ -1566,7 +1594,7 @@ function showDashboard_render() {
       <div class="card-pending-item" style="color:#9A6F00">${p2.floor} — ${p2.task}</div>`).join('')
       + (extraPending.length>SHOW_N?`<div style="font-size:10px;color:var(--text-muted);margin-top:2px">+${extraPending.length-SHOW_N} more extra pending…</div>`:'') : '';
 
-    const ep = getExtraProgress(bk, viewingDate);
+    const ep = getExtraProgressMonth(bk, viewingDate);
     const op = getOuterProgress(bk, viewingDate);
     const outerPending = getOuterPending(bk, viewingDate);
     const outerPendingCardHtml = outerPending.length ? outerPending.slice(0,SHOW_N).map(p2=>`
@@ -1595,18 +1623,18 @@ function showDashboard_render() {
         ${_taskStars(p.pct)}
       </div>
       <div class="prog-pct">${p.pct}% Complete</div>
-      ${ep.total ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-        <div style="font-size:10px;font-weight:700;color:#9A6F00;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">✨ Extra Schedule</div>
+      ${ep.tasksTotal ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:700;color:#9A6F00;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">✨ Extra Schedule — This Month</div>
         <div class="card-stats">
-          <div class="stat"><div class="stat-num" style="color:#9A6F00">${ep.done}</div><div class="stat-label">Done</div></div>
-          <div class="stat"><div class="stat-num" style="color:${ep.total-ep.done?'var(--orange)':'var(--green)'}">${ep.total-ep.done}</div><div class="stat-label">Pending</div></div>
-          <div class="stat"><div class="stat-num" style="color:#9A6F00">${ep.total}</div><div class="stat-label">Total</div></div>
+          <div class="stat"><div class="stat-num" style="color:#9A6F00">${ep.tasksMet}</div><div class="stat-label">On Track</div></div>
+          <div class="stat"><div class="stat-num" style="color:${ep.tasksTotal-ep.tasksMet?'var(--orange)':'var(--green)'}">${ep.tasksTotal-ep.tasksMet}</div><div class="stat-label">Behind</div></div>
+          <div class="stat"><div class="stat-num" style="color:#9A6F00">${ep.tasksTotal}</div><div class="stat-label">Tasks</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:2px;">
           <div class="prog-wrap" style="flex:1;margin-bottom:0;"><div class="prog-bar" style="width:${ep.pct}%;background:linear-gradient(90deg,#D4A843,#f0c040)"></div></div>
           ${_taskStars(ep.pct)}
         </div>
-        <div class="prog-pct" style="color:#9A6F00">${ep.pct}% Extra Complete</div>
+        <div class="prog-pct" style="color:#9A6F00">${ep.pct}% On Track This Month</div>
       </div>` : ''}
       ${op.total ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
         <div style="font-size:10px;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">🌿 Outer Areas</div>
@@ -1703,7 +1731,7 @@ function renderBuildingView() {
   floorTabsHtml += `<button class="ftab extra-tab ${currentFloor==='_extra'?'active':''}" onclick="switchFloor('_extra')">✨ Extra Schedule</button>`;
   floorTabsHtml += `<button class="ftab extra-tab ${currentFloor==='_outer'?'active':''}" onclick="switchFloor('_outer')" style="border-color:#2E7D32;color:${currentFloor==='_outer'?'white':'#2E7D32'};${currentFloor==='_outer'?'background:#2E7D32;':''}">🌿 Outer Areas</button>`;
 
-  const ep = getExtraProgress(bk, viewingDate);
+  const ep = getExtraProgressMonth(bk, viewingDate);
   const op = getOuterProgress(bk, viewingDate);
   // Build supervisor badge for summary bar
   const supsBld = getSupForBuilding(bk);
@@ -1730,17 +1758,17 @@ function renderBuildingView() {
       </div>
       <div class="sb-prog-pct" id="sb-pct">${p.pct}% Daily Tasks Complete</div>
     </div>
-    ${ep.total ? `<div class="sb-div"></div>
+    ${ep.tasksTotal ? `<div class="sb-div"></div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <div style="font-size:11px;font-weight:700;color:#9A6F00;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">✨ Extra</div>
-      <div class="sb-stat"><div class="sb-num" style="color:#9A6F00" id="sb-ex-done">${ep.done}</div><div class="sb-lbl">Done</div></div>
-      <div class="sb-stat"><div class="sb-num" style="color:${ep.total-ep.done?'var(--orange)':'var(--green)'}" id="sb-ex-pend">${ep.total-ep.done}</div><div class="sb-lbl">Pending</div></div>
+      <div class="sb-stat"><div class="sb-num" style="color:#9A6F00" id="sb-ex-done">${ep.tasksMet}</div><div class="sb-lbl">On Track</div></div>
+      <div class="sb-stat"><div class="sb-num" style="color:${ep.tasksTotal-ep.tasksMet?'var(--orange)':'var(--green)'}" id="sb-ex-pend">${ep.tasksTotal-ep.tasksMet}</div><div class="sb-lbl">Behind</div></div>
       <div style="min-width:100px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
           <div class="sb-prog-wrap" style="flex:1;margin-bottom:0;"><div class="sb-prog-fill" id="sb-ex-prog" style="width:${ep.pct}%;background:linear-gradient(90deg,#D4A843,#f0c040)"></div></div>
           <span id="sb-ex-stars">${_taskStars(ep.pct).replace('<div class','<span class').replace('</div>','</span>')}</span>
         </div>
-        <div class="sb-prog-pct" id="sb-ex-pct" style="color:#9A6F00">${ep.pct}% Extra Complete</div>
+        <div class="sb-prog-pct" id="sb-ex-pct" style="color:#9A6F00">${ep.pct}% On Track</div>
       </div>
     </div>` : ''}
     ${op.total ? `<div class="sb-div"></div>
@@ -2147,37 +2175,186 @@ function removeStaffModal(idx) {
   showToast('👷 ' + (removed[0]||'Staff') + ' removed');
 }
 
+// ── Helper: get all days in a given month (YYYY-MM) ──────────────────────────
+function _monthDays(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  const days = [];
+  const total = new Date(y, m, 0).getDate();
+  for (let d = 1; d <= total; d++) {
+    days.push(ym + '-' + String(d).padStart(2,'0'));
+  }
+  return days;
+}
+
+// ── Helper: month string for a date key (YYYY-MM) ────────────────────────────
+function _monthOf(dateKey) { return dateKey ? dateKey.slice(0,7) : todayKey().slice(0,7); }
+
 function renderExtraSchedule() {
   const bk = currentBuilding;
   const BUILDINGS = getBuildings();
   const b = BUILDINGS[bk];
   const edit = canEdit();
+
+  // Month being viewed
+  const viewMonth  = _monthOf(viewingDate);
+  const monthDays  = _monthDays(viewMonth);
+  const today      = todayKey();
+  const totalDays  = monthDays.length;
+
+  // Format month label e.g. "April 2026"
+  const [my, mm] = viewMonth.split('-').map(Number);
+  const monthLabel = new Date(my, mm-1, 1).toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+
+  // Month navigation helpers
+  const prevMonth = (function(){
+    const d = new Date(my, mm-2, 1);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  })();
+  const nextMonth = (function(){
+    const d = new Date(my, mm, 1);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  })();
+  const curMonth = today.slice(0,7);
+  const isCurrentMonth = viewMonth === curMonth;
+
+  // Days elapsed so far (for progress display)
+  const elapsedDays = monthDays.filter(d => d <= today).length || 1;
+
+  // ── Per-category config: expected occurrences per month ──────────────────
+  // Weekly  → ~4 times/month (totalDays / 7, rounded)
+  // 15-day  → 2 times/month
+  // Monthly → 1 time/month
   const cats = [
-    {key:'weekly',label:'Weekly Tasks',badgeClass:'badge-weekly',icon:'📅'},
-    {key:'fifteen_days',label:'15-Day Tasks',badgeClass:'badge-15days',icon:'🗓'},
-    {key:'monthly',label:'Monthly Tasks',badgeClass:'badge-monthly',icon:'📆'},
+    {
+      key: 'weekly', label: 'Weekly Tasks', badgeClass: 'badge-weekly', icon: '📅',
+      freqLabel: 'Once a week',
+      // Expected completions = number of full weeks elapsed so far (min 1 for display)
+      expectedFn: () => {
+        const weeksElapsed = Math.max(1, Math.floor(elapsedDays / 7));
+        const weeksTotal   = Math.max(1, Math.round(totalDays / 7));
+        return { elapsed: weeksElapsed, total: weeksTotal, unit: 'week' };
+      }
+    },
+    {
+      key: 'fifteen_days', label: '15-Day Tasks', badgeClass: 'badge-15days', icon: '🗓',
+      freqLabel: 'Twice a month',
+      expectedFn: () => {
+        // Period 1: days 1-15, Period 2: days 16-end
+        const period1Done = elapsedDays >= 15;  // first half elapsed
+        const period2Done = elapsedDays >= totalDays; // second half elapsed
+        const elapsed = (period1Done ? 1 : 0) + (period2Done ? 1 : 0) || 1;
+        return { elapsed, total: 2, unit: 'period' };
+      }
+    },
+    {
+      key: 'monthly', label: 'Monthly Tasks', badgeClass: 'badge-monthly', icon: '📆',
+      freqLabel: 'Once a month',
+      expectedFn: () => ({ elapsed: 1, total: 1, unit: 'month' })
+    },
   ];
-  let html = '<div class="extra-grid">';
+
+  let html = `
+  <div style="background:var(--white);border-radius:12px;padding:12px 20px;margin-bottom:18px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+    <div style="font-size:13px;font-weight:700;color:var(--teal-dark);">✨ Extra Schedule — Monthly Completion</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button onclick="extraScheduleNavMonth('${prevMonth}')" style="background:var(--teal-pale);border:1px solid var(--teal-mid);color:var(--teal-dark);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;">‹ Prev</button>
+      <span style="font-size:14px;font-weight:700;color:var(--teal-dark);min-width:130px;text-align:center;">${monthLabel}</span>
+      <button onclick="extraScheduleNavMonth('${nextMonth}')" ${isCurrentMonth?'disabled style="opacity:.4;cursor:not-allowed;"':''} style="background:var(--teal-pale);border:1px solid var(--teal-mid);color:var(--teal-dark);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;">Next ›</button>
+      ${!isCurrentMonth?`<button onclick="extraScheduleNavMonth('${curMonth}')" style="background:var(--teal);border:none;color:white;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;">This Month</button>`:''}
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);">Day ${elapsedDays} of ${totalDays} · ${monthLabel}</div>
+  </div>
+  <div class="extra-grid">`;
+
   for (const cat of cats) {
     const items = b.extra[cat.key] || [];
-    if(!items.length) continue;
-    const checked = getChecked(bk, '_extra_'+cat.key, viewingDate);
-    const done = Object.values(checked).filter(Boolean).length;
+    if (!items.length) continue;
+
+    const { elapsed: expElapsed, total: expTotal, unit } = cat.expectedFn();
+
+    // Count how many times each task was checked across the whole month
+    const itemCounts = items.map((_, i) =>
+      monthDays.filter(d => {
+        const chk = getChecked(bk, '_extra_' + cat.key, d);
+        return !!chk[i];
+      }).length
+    );
+
+    // Today's checked state for the interactive checkbox (current month only)
+    const todayChecked = isCurrentMonth ? getChecked(bk, '_extra_' + cat.key, viewingDate) : {};
+
+    // Overall card stats: how many tasks hit their expected count
+    const tasksMet  = itemCounts.filter(c => c >= expElapsed).length;
+    const overallPct = items.length > 0 ? Math.round(tasksMet / items.length * 100) : 0;
+
     let itHtml = '';
-    for(let i=0;i<items.length;i++){
-      const isChk = !!checked[i];
-      itHtml += `<div class="extra-item">
-        <div class="chkbox ${isChk?'chk':''} ${!edit?'disabled':''}" onclick="${edit?`toggleExtra('${cat.key}',${i})`:''}"></div>
-        <div class="iname ${isChk?'chk':''}" style="font-size:13px">${items[i]}</div>
+    for (let i = 0; i < items.length; i++) {
+      const count      = itemCounts[i];
+      const pct        = expElapsed > 0 ? Math.min(100, Math.round(count / expElapsed * 100)) : 0;
+      const isChkToday = isCurrentMonth && !!todayChecked[i];
+      const barColor   = pct >= 100 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+      const statusIcon = pct >= 100 ? '✅' : pct > 0 ? '⚠️' : '❌';
+
+      // Label: "2/4 weeks" or "1/2 periods" or "1/1 month"
+      const countLabel = unit === 'week'
+        ? `${count}/${expTotal} wk${expTotal!==1?'s':''}`
+        : unit === 'period'
+          ? `${count}/${expTotal} × `
+          : count >= 1 ? 'Done ✓' : 'Pending';
+
+      itHtml += `<div class="extra-item" style="flex-direction:column;align-items:stretch;gap:5px;padding:10px 20px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${isCurrentMonth
+            ? `<div class="chkbox ${isChkToday?'chk':''} ${!edit?'disabled':''}" onclick="${edit?`toggleExtra('${cat.key}',${i})`:''}"></div>`
+            : `<span style="font-size:15px;width:22px;min-width:22px;text-align:center;">${statusIcon}</span>`}
+          <div style="flex:1;font-size:13px;font-weight:500;color:var(--text);">${items[i]}</div>
+          <div style="font-size:12px;font-weight:700;color:${barColor};white-space:nowrap;">${countLabel}</div>
+          <div style="font-size:11px;font-weight:700;color:${barColor};min-width:36px;text-align:right;">${pct}%</div>
+        </div>
+        <div style="background:var(--teal-pale);border-radius:100px;height:5px;overflow:hidden;margin-left:32px;">
+          <div style="height:100%;border-radius:100px;background:${barColor};width:${pct}%;transition:width .5s;"></div>
+        </div>
       </div>`;
     }
+
+    // Sub-label for expected frequency
+    const freqSubLabel = unit === 'week'
+      ? `Expected ${expTotal}× this month (${expElapsed} elapsed so far)`
+      : unit === 'period'
+        ? `Expected 2× this month · Period 1: days 1–15 · Period 2: days 16–${totalDays}`
+        : `Expected once this month`;
+
     html += `<div class="extra-card">
-      <div class="extra-card-hdr"><span style="font-size:20px">${cat.icon}</span><h3>${cat.label}</h3><span class="extra-badge ${cat.badgeClass}">${done}/${items.length}</span></div>
+      <div class="extra-card-hdr" style="flex-wrap:wrap;gap:6px;">
+        <span style="font-size:20px">${cat.icon}</span>
+        <div>
+          <h3 style="margin-bottom:2px;">${cat.label}</h3>
+          <div style="font-size:10px;color:var(--text-muted);font-style:italic;">${freqSubLabel}</div>
+        </div>
+        <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <span class="extra-badge ${cat.badgeClass}">${tasksMet}/${items.length} on track</span>
+          <span style="font-size:10px;color:var(--text-muted);">${overallPct}% complete</span>
+        </div>
+      </div>
       <div class="extra-items">${itHtml}</div>
     </div>`;
   }
+
   html += '</div>';
   document.getElementById('floorContent').innerHTML = html;
+}
+
+function extraScheduleNavMonth(ym) {
+  // Pick the last day of that month (or today if current month) as viewingDate
+  const today = todayKey();
+  const curMonth = today.slice(0,7);
+  if (ym === curMonth) {
+    viewingDate = today;
+  } else {
+    // Pick first day of month for past months
+    viewingDate = ym + '-01';
+  }
+  renderExtraSchedule();
 }
 
 function renderOuterAreas() {
@@ -2319,17 +2496,17 @@ function updateSummaryBar() {
   const BUILDINGS = getBuildings();
   const b = BUILDINGS[bk];
   const p = getBuildingProgress(bk, viewingDate);
-  const ep = getExtraProgress(bk, viewingDate);
+  const ep = getExtraProgressMonth(bk, viewingDate);
   const op = getOuterProgress(bk, viewingDate);
   const el = (id)=>document.getElementById(id);
   if(el('sb-prog')) el('sb-prog').style.width=p.pct+'%';
   if(el('sb-pct')) el('sb-pct').textContent=p.pct+'% Daily Tasks Complete';
   if(el('sb-done')) el('sb-done').textContent=p.done;
   if(el('sb-pend')) el('sb-pend').textContent=p.total-p.done;
-  if(el('sb-ex-done')) el('sb-ex-done').textContent=ep.done;
-  if(el('sb-ex-pend')){ el('sb-ex-pend').textContent=ep.total-ep.done; el('sb-ex-pend').style.color=(ep.total-ep.done)?'var(--orange)':'var(--green)'; }
+  if(el('sb-ex-done')) el('sb-ex-done').textContent=ep.tasksMet;
+  if(el('sb-ex-pend')){ el('sb-ex-pend').textContent=ep.tasksTotal-ep.tasksMet; el('sb-ex-pend').style.color=(ep.tasksTotal-ep.tasksMet)?'var(--orange)':'var(--green)'; }
   if(el('sb-ex-prog')) el('sb-ex-prog').style.width=ep.pct+'%';
-  if(el('sb-ex-pct')) el('sb-ex-pct').textContent=ep.pct+'% Extra Complete';
+  if(el('sb-ex-pct')) el('sb-ex-pct').textContent=ep.pct+'% On Track This Month';
   if(el('sb-ex-stars')){ const tmp=document.createElement('div'); tmp.innerHTML=_taskStars(ep.pct); if(tmp.firstChild){el('sb-ex-stars').className=tmp.firstChild.className; el('sb-ex-stars').textContent=tmp.firstChild.textContent;} }
   if(el('sb-oa-done')) el('sb-oa-done').textContent=op.done;
   if(el('sb-oa-pend')){ el('sb-oa-pend').textContent=op.total-op.done; el('sb-oa-pend').style.color=(op.total-op.done)?'var(--orange)':'var(--green)'; }
