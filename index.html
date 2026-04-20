@@ -2987,12 +2987,15 @@ function showToast(msg) {
 
 // ── QR CODE GENERATION (pure JS, no library needed) ──────────────────────────
 // Minimal QR encoder using qr-creator-like approach via qrcode.js CDN
-function loadQrLib(cb) {
+function loadQrLib(cb, onErr) {
   if (window.QRCode) { cb(); return; }
   const s = document.createElement('script');
   s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
   s.onload = cb;
-  s.onerror = () => { showToast('⚠️ QR library failed to load'); };
+  s.onerror = () => {
+    showToast('⚠️ QR library failed to load');
+    if (typeof onErr === 'function') onErr();
+  };
   document.head.appendChild(s);
 }
 
@@ -3003,8 +3006,15 @@ let _qrActiveLabel = '';
 
 function getBaseUrl() {
   const href = window.location.href;
-  const isBad = href.startsWith('about:') || href.startsWith('blob:') || !href.includes('://');
-  if (!isBad) return href.split('?')[0];
+  // file:// URLs are inaccessible from other devices (phones can't scan them).
+  // Also reject about:, blob:, and anything without a proper protocol.
+  const isBad = href.startsWith('about:') || href.startsWith('blob:')
+              || href.startsWith('file:') || !href.includes('://');
+  if (!isBad) {
+    // If a user previously saved a custom URL, honour it (they may be on a
+    // reverse-proxy / different domain than window.location suggests).
+    return localStorage.getItem('gitam_base_url') || href.split('?')[0];
+  }
   return localStorage.getItem('gitam_base_url') || '';
 }
 
@@ -3023,8 +3033,9 @@ function showQrModal(building, floor) {
   const url = getFeedbackUrl(building, floor);
   _qrActiveUrl = url || '';
   _qrActiveLabel = building + ' — ' + floor;
-  document.getElementById('qrModalTitle').textContent = floor + ' — QR Feedback';
-  document.getElementById('qrModalSub').textContent = building;
+  // Fix 4: building is primary label, floor is secondary
+  document.getElementById('qrModalTitle').textContent = building + ' — QR Feedback';
+  document.getElementById('qrModalSub').textContent = floor;
   document.getElementById('qrModal').classList.add('open');
 
   const wrap = document.getElementById('qrCanvasWrap');
@@ -3032,9 +3043,14 @@ function showQrModal(building, floor) {
   const warningBox = document.getElementById('qrWarningBox');
 
   if (!url) {
-    // Running in srcdoc/embedded context — no usable URL yet
-    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;text-align:center;color:var(--text-muted);font-size:13px;padding:16px;">Set the file URL below to generate QR codes</div>';
-    urlBox.innerHTML = '<div style="margin-bottom:8px;font-size:12px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.5px;">File URL (where this HTML file is hosted / shared)</div>'
+    // Fix 1: file:// or no URL — show a clear prompt explaining why
+    const isFileUrl = window.location.href.startsWith('file:');
+    const reason = isFileUrl
+      ? '⚠️ This file is open from your local drive (<code>file://</code>). Phones cannot open <code>file://</code> links, so QR codes will not work. Enter the network/server URL where this file is hosted:'
+      : 'Set the hosted URL of this file to generate scannable QR codes:';
+    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:120px;text-align:center;color:var(--text-muted);font-size:13px;padding:16px;">📵 QR unavailable — enter URL below</div>';
+    urlBox.innerHTML = '<div style="margin-bottom:8px;font-size:12px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.5px;">Hosted File URL</div>'
+      + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;line-height:1.5;">' + reason + '</div>'
       + '<input id="qrBaseUrlInput" type="text" placeholder="e.g. https://yourserver.com/GITAM_Checklist.html" style="width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:8px;font-size:13px;font-family:DM Sans,sans-serif;" value="' + (localStorage.getItem('gitam_base_url')||'') + '">'
       + '<button class="btn btn-p" style="margin-top:8px;width:100%;" onclick="applyBaseUrl()">✅ Save & Generate QR</button>';
     if (warningBox) warningBox.style.display = 'none';
@@ -3042,7 +3058,9 @@ function showQrModal(building, floor) {
   }
 
   urlBox.textContent = url;
-  if (warningBox) warningBox.style.display = '';
+  // Only show the warning if the URL looks like it's from window.location (not a custom saved URL)
+  const savedUrl = localStorage.getItem('gitam_base_url') || '';
+  if (warningBox) warningBox.style.display = savedUrl ? 'none' : '';
   loadQrLib(() => {
     wrap.innerHTML = '';
     new QRCode(wrap, {
@@ -3133,12 +3151,14 @@ function showQrSheet(building) {
   const baseUrl = getBaseUrl();
   if (!baseUrl) {
     grid.innerHTML = '<div style="padding:20px;text-align:center;">'
-      + '<p style="color:var(--text-muted);font-size:13px;margin-bottom:12px;">Set the file URL to generate QR codes for all floors.</p>'
+      + '<p style="color:var(--text-muted);font-size:13px;margin-bottom:12px;">Set the hosted URL of this file to generate QR codes for all floors.</p>'
+      + (window.location.href.startsWith('file:') ? '<p style="color:#C0392B;font-size:12px;margin-bottom:10px;">⚠️ File is open from local drive — phones cannot scan <code>file://</code> links. Enter the server/network URL below.</p>' : '')
       + '<input id="qrSheetBaseInput" type="text" placeholder="e.g. https://yourserver.com/GITAM_Checklist.html" style="width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:8px;font-size:13px;font-family:DM Sans,sans-serif;" value="' + (localStorage.getItem('gitam_base_url')||'') + '">'
       + '<button class="btn btn-p" style="margin-top:10px;width:100%;" onclick="applyBaseUrlSheet(\'' + building + '\')">\u2705 Save & Generate All QR Codes</button>'
       + '</div>';
     return;
   }
+  // Fix 5: pass onerror callback so failures are visible
   loadQrLib(() => {
     const floors = Object.keys(b.floors);
     grid.innerHTML = '';
@@ -3149,35 +3169,43 @@ function showQrSheet(building) {
       const title = document.createElement('div');
       title.style.cssText = 'font-weight:700;font-size:13px;color:#004F4F;margin-bottom:8px;';
       title.textContent = fn;
+      // Fix 2: QRCode library requires a div container, NOT a canvas element
       const canvasWrap = document.createElement('div');
       canvasWrap.style.cssText = 'display:flex;justify-content:center;margin-bottom:6px;';
-      const c = document.createElement('canvas');
-      c.width = 140; c.height = 140;
-      canvasWrap.appendChild(c);
+      // Fix 2: use a div as the QR target (qrcodejs renders into a div correctly)
+      const qrDiv = document.createElement('div');
+      qrDiv.style.cssText = 'width:140px;height:140px;';
+      canvasWrap.appendChild(qrDiv);
       const urlTxt = document.createElement('div');
       urlTxt.style.cssText = 'font-size:9px;color:#999;word-break:break-all;';
       urlTxt.textContent = url || '';
       cell.appendChild(title); cell.appendChild(canvasWrap); cell.appendChild(urlTxt);
+      // Store floor name on cell for print extraction
+      cell.dataset.floorName = fn;
       grid.appendChild(cell);
       if (url) {
-        try { new QRCode(c, { text: url, width: 140, height: 140, colorDark: '#004F4F', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch(e) {}
+        try { new QRCode(qrDiv, { text: url, width: 140, height: 140, colorDark: '#004F4F', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch(e) {}
       }
     });
-  });
+  }, () => { showToast('⚠️ QR library failed to load — check internet connection'); });
 }
 
 function printQrSheet() {
   const grid = document.getElementById('qrSheetGrid');
   const title = document.getElementById('qrSheetTitle').textContent;
-  const cells = grid.querySelectorAll('div > canvas');
   let imgs = [];
-  grid.querySelectorAll('div[style]').forEach(cell => {
+  // Fix 3: iterate cells using dataset.floorName; find canvas inside the qrDiv (div > canvas)
+  grid.querySelectorAll('div[data-floor-name]').forEach(cell => {
+    const floorName = cell.dataset.floorName || '';
+    // qrcodejs renders a canvas (or img) inside the div we passed it
     const c = cell.querySelector('canvas');
-    const floorName = cell.querySelector('div')?.textContent || '';
+    const imgEl = cell.querySelector('img');
     let imgSrc = '';
     if (c) { try { imgSrc = c.toDataURL('image/png'); } catch(e) {} }
+    else if (imgEl) { imgSrc = imgEl.src; }
     imgs.push({ name: floorName, src: imgSrc });
   });
+  if (!imgs.length) { showToast('⚠️ No QR codes to print — generate them first'); return; }
   const w = window.open('', '_blank');
   w.document.write(`<!DOCTYPE html><html><head><title>QR Sheet</title>
     <style>body{font-family:sans-serif;padding:20px}h2{color:#004F4F;text-align:center;margin-bottom:20px}
