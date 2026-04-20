@@ -3011,10 +3011,11 @@ function getBaseUrl() {
   const isBad = href.startsWith('about:') || href.startsWith('blob:')
               || href.startsWith('file:') || !href.includes('://');
   if (!isBad) {
-    // If a user previously saved a custom URL, honour it (they may be on a
-    // reverse-proxy / different domain than window.location suggests).
-    return localStorage.getItem('gitam_base_url') || href.split('?')[0];
+    // Running from a real http/https URL (e.g. Vercel, local server, network share).
+    // Always use the actual window URL — localStorage override only applies for file:// mode.
+    return href.split('?')[0];
   }
+  // file:// or unknown context — fall back to manually saved URL
   return localStorage.getItem('gitam_base_url') || '';
 }
 
@@ -3058,9 +3059,9 @@ function showQrModal(building, floor) {
   }
 
   urlBox.textContent = url;
-  // Only show the warning if the URL looks like it's from window.location (not a custom saved URL)
-  const savedUrl = localStorage.getItem('gitam_base_url') || '';
-  if (warningBox) warningBox.style.display = savedUrl ? 'none' : '';
+  // Only show the "local file" warning when running from file:// context with a saved URL
+  const isFileCtx = window.location.href.startsWith('file:');
+  if (warningBox) warningBox.style.display = isFileCtx ? '' : 'none';
   loadQrLib(() => {
     wrap.innerHTML = '';
     new QRCode(wrap, {
