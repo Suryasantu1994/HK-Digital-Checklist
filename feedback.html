@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GITAM Housekeeping Feedback</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey:            "AIzaSyCQR-NGbFBz_0Rv4Fvd0etGIL-8RcdNTv4",
+    authDomain:        "gitam-checklist.firebaseapp.com",
+    databaseURL:       "https://gitam-checklist-default-rtdb.firebaseio.com",
+    projectId:         "gitam-checklist",
+    storageBucket:     "gitam-checklist.firebasestorage.app",
+    messagingSenderId: "578218281711",
+    appId:             "1:578218281711:web:ccb2a9b867316d9d48a91a"
+  };
+  firebase.initializeApp(firebaseConfig);
+  window._db = firebase.firestore();
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;min-height:100vh;background:linear-gradient(135deg,#004F4F 0%,#006B6B 50%,#008080 100%);display:flex;align-items:center;justify-content:center;padding:20px;}
+.card{background:#fff;border-radius:20px;padding:36px 32px;width:500px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.logo{text-align:center;margin-bottom:16px;}
+.logo img{height:56px;}
+.title{font-family:"Playfair Display",serif;font-size:20px;color:#004F4F;margin-bottom:4px;text-align:center;}
+.location{text-align:center;font-size:13px;color:#5A7070;margin-bottom:22px;padding:8px 14px;background:#E0F2F2;border-radius:8px;font-weight:600;}
+.section-label{font-size:12px;font-weight:700;color:#004F4F;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.input-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.input-group{flex:1;min-width:120px;}
+.input-group label{display:block;font-size:11px;font-weight:700;color:#004F4F;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.input-group input{width:100%;padding:10px 12px;border:2px solid #C8E0E0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;color:#1A2E2E;background:#F4F8F8;transition:border-color .2s;}
+.input-group input:focus{outline:none;border-color:#006B6B;background:#fff;}
+.stars-row{display:flex;gap:10px;justify-content:center;margin-bottom:16px;}
+.star-btn{font-size:40px;cursor:pointer;color:#ddd;transition:color .15s,transform .1s;border:none;background:none;padding:0;line-height:1;}
+.star-btn.lit{color:#F5B301;}
+.star-btn.hover{color:#F5B301;transform:scale(1.12);}
+.star-label{text-align:center;font-size:14px;font-weight:600;color:#006B6B;min-height:22px;margin-bottom:10px;}
+textarea{width:100%;padding:12px 14px;border:2px solid #C8E0E0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:#1A2E2E;resize:vertical;min-height:90px;transition:border-color .2s;background:#F4F8F8;}
+textarea:focus{outline:none;border-color:#006B6B;background:#fff;}
+.submit-btn{width:100%;padding:14px;background:linear-gradient(135deg,#004F4F,#008080);color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:16px;transition:all .2s;}
+.submit-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,107,107,.35);}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.staff-wrap{display:none;margin-bottom:18px;padding:12px 14px;background:#E0F2F2;border-radius:10px;border:1px solid #B2DFDF;}
+.staff-label{font-size:11px;font-weight:700;color:#004F4F;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.staff-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.staff-chip{background:#fff;border:1px solid #B2DFDF;color:#004F4F;font-size:12px;font-weight:600;padding:4px 12px;border-radius:16px;}
+.success{display:none;text-align:center;padding:32px 20px;}
+.success .tick{font-size:56px;margin-bottom:12px;}
+.success h3{font-family:"Playfair Display",serif;font-size:22px;color:#004F4F;margin-bottom:8px;}
+.success p{color:#5A7070;font-size:14px;line-height:1.6;}
+.error-msg{background:#FFF0F0;border:1px solid #FFCCCC;border-radius:8px;padding:10px 14px;color:#C0392B;font-size:13px;margin-top:10px;display:none;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div id="formSection">
+    <div class="logo">
+      <img src="https://upload.wikimedia.org/wikipedia/en/thumb/1/13/GITAM_university_logo.png/200px-GITAM_university_logo.png" onerror="this.style.display='none'">
+    </div>
+    <div class="title">Housekeeping Feedback</div>
+    <div class="location" id="locationLabel">Loading…</div>
+    <div class="staff-wrap" id="staffWrap">
+      <div class="staff-label">👷 Assigned Staff</div>
+      <div class="staff-chips" id="staffChips"></div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label>Room No. <span style="color:#C0392B">*</span></label>
+        <input type="text" id="roomNo" placeholder="e.g. 301" maxlength="20" oninput="checkReady()">
+      </div>
+      <div class="input-group">
+        <label>Your ID <span style="color:#C0392B">*</span></label>
+        <input type="text" id="userId" placeholder="Student / Staff ID" maxlength="40" oninput="checkReady()">
+      </div>
+      <div class="input-group">
+        <label>Your Name <span style="color:#C0392B">*</span></label>
+        <input type="text" id="userName" placeholder="e.g. Ravi Kumar" maxlength="60" oninput="checkReady()">
+      </div>
+    </div>
+    <div class="section-label">Rate Cleanliness</div>
+    <div class="stars-row">
+      <button class="star-btn" onclick="setStar(1)" onmouseenter="hoverStar(1)" onmouseleave="unhover()">★</button>
+      <button class="star-btn" onclick="setStar(2)" onmouseenter="hoverStar(2)" onmouseleave="unhover()">★</button>
+      <button class="star-btn" onclick="setStar(3)" onmouseenter="hoverStar(3)" onmouseleave="unhover()">★</button>
+      <button class="star-btn" onclick="setStar(4)" onmouseenter="hoverStar(4)" onmouseleave="unhover()">★</button>
+      <button class="star-btn" onclick="setStar(5)" onmouseenter="hoverStar(5)" onmouseleave="unhover()">★</button>
+    </div>
+    <div class="star-label" id="starLabel"></div>
+    <div class="section-label" style="margin-top:4px">Comments (optional)</div>
+    <textarea id="comment" placeholder="Share your feedback about cleanliness on this floor…" maxlength="500"></textarea>
+    <button class="submit-btn" id="submitBtn" onclick="submitFeedback()" disabled>Submit Feedback</button>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+  <div class="success" id="successSection">
+    <div class="tick">✅</div>
+    <h3>Thank You!</h3>
+    <p>Your feedback has been recorded.<br>It helps us maintain cleanliness standards at GITAM University.</p>
+  </div>
+</div>
+
+<script>
+  const STAR_LABELS = ['','Poor','Fair','Good','Very Good','Excellent'];
+  let rating = 0;
+  const params = new URLSearchParams(window.location.search);
+  const building = decodeURIComponent(params.get('b') || '');
+  const floor    = decodeURIComponent(params.get('f') || '');
+
+  // Set location label
+  document.getElementById('locationLabel').textContent =
+    building + (floor ? ' — ' + floor : '');
+
+  // Load assigned staff from Firestore
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  if (window._db && building && floor) {
+    const docId = 'staff__' + building + '__' + floor + '__' + todayKey();
+    window._db.collection('staff').doc(docId).get().then(function(snap) {
+      if (snap.exists) {
+        const data = snap.data();
+        const names = (data && Array.isArray(data.staff)) ? data.staff.filter(Boolean) : [];
+        if (names.length) {
+          document.getElementById('staffChips').innerHTML =
+            names.map(n => '<span class="staff-chip">' + n + '</span>').join('');
+          document.getElementById('staffWrap').style.display = 'block';
+        }
+      }
+    }).catch(function(){});
+  }
+
+  function setStar(n) {
+    rating = n;
+    document.querySelectorAll('.star-btn').forEach(function(b, i) {
+      b.classList.toggle('lit', i < n);
+    });
+    document.getElementById('starLabel').textContent = STAR_LABELS[n] || '';
+    checkReady();
+  }
+
+  function hoverStar(n) {
+    document.querySelectorAll('.star-btn').forEach(function(b, i) {
+      b.classList.toggle('hover', i < n);
+    });
+  }
+
+  function unhover() {
+    document.querySelectorAll('.star-btn').forEach(function(b) {
+      b.classList.remove('hover');
+    });
+  }
+
+  function checkReady() {
+    const r = document.getElementById('roomNo').value.trim();
+    const u = document.getElementById('userId').value.trim();
+    const n = document.getElementById('userName').value.trim();
+    document.getElementById('submitBtn').disabled = !(rating && r && u && n);
+  }
+
+  async function submitFeedback() {
+    const roomNo   = document.getElementById('roomNo').value.trim();
+    const userId   = document.getElementById('userId').value.trim();
+    const userName = document.getElementById('userName').value.trim();
+    const comment  = document.getElementById('comment').value.trim();
+
+    if (!rating)   { showError('Please select a star rating.'); return; }
+    if (!roomNo)   { showError('Please enter your room number.'); return; }
+    if (!userId)   { showError('Please enter your ID.'); return; }
+    if (!userName) { showError('Please enter your name.'); return; }
+
+    const staffNames = Array.from(document.querySelectorAll('.staff-chip')).map(c => c.textContent);
+
+    const entry = {
+      building, floor,
+      staff: staffNames,
+      roomNo, userId, userName,
+      rating,
+      comment,
+      ts:   new Date().toISOString(),
+      date: new Date().toLocaleDateString('en-IN')
+    };
+
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('submitBtn').textContent = 'Submitting…';
+
+    try {
+      if (window._db) {
+        await window._db.collection('feedback').add(entry);
+      } else {
+        throw new Error('No DB');
+      }
+    } catch(e) {
+      // fallback: save to localStorage
+      try {
+        const all = JSON.parse(localStorage.getItem('gitam_floor_feedback') || '[]');
+        all.unshift(entry);
+        localStorage.setItem('gitam_floor_feedback', JSON.stringify(all));
+      } catch(e2) {}
+    }
+
+    document.getElementById('formSection').style.display = 'none';
+    document.getElementById('successSection').style.display = 'block';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+</script>
+</body>
+</html>

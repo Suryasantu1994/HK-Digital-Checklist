@@ -3051,10 +3051,10 @@ function getBaseUrl() {
 function getFeedbackUrl(building, floor) {
   const base = getBaseUrl();
   if (!base) return null;
-  // Staff is intentionally NOT embedded in the URL.
-  // The feedback page fetches the currently-assigned staff live from Firestore
-  // at scan time, so QR codes always reflect the latest assignment.
-  return base + '?feedback=1&b=' + encodeURIComponent(building) + '&f=' + encodeURIComponent(floor);
+  // Point QR codes to the standalone feedback.html page (same folder).
+  // This page works independently — no login, no main app logic needed.
+  const feedbackBase = base.replace(/\/[^\/]*$/, '/feedback.html');
+  return feedbackBase + '?b=' + encodeURIComponent(building) + '&f=' + encodeURIComponent(floor);
 }
 
 function showQrModal(building, floor) {
