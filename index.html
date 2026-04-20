@@ -662,17 +662,15 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 </head>
 <body>
 
-<!-- Hide login immediately if this is a feedback URL (prevents flash) -->
+<!-- Redirect old QR codes (?feedback=1) to standalone feedback.html instantly -->
 <script>
   (function(){
     var params = new URLSearchParams(window.location.search);
     if(params.get('feedback')==='1'){
-      // Inject a <style> immediately so loginPage/mainApp are hidden
-      // before any element is painted — no flash at all
-      var st = document.createElement('style');
-      st.id = 'feedbackHideStyle';
-      st.textContent = '#loginPage{display:none!important}#mainApp{display:none!important}#feedbackPage{display:flex!important}';
-      document.head.appendChild(st);
+      var b = params.get('b') || '';
+      var f = params.get('f') || '';
+      var base = window.location.href.split('?')[0].replace(/\/[^\/]*$/, '/');
+      window.location.replace(base + 'feedback.html?b=' + encodeURIComponent(b) + '&f=' + encodeURIComponent(f));
     }
   })();
 </script>
@@ -811,35 +809,6 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 </div>
 
 <!-- ── FEEDBACK PAGE (shown when QR scanned) ──────────────────────────────── -->
-<!-- Self-activating: this script runs as soon as the div is parsed, before window.onload -->
-<script>
-(function(){
-  var p = new URLSearchParams(window.location.search);
-  if(p.get('feedback')==='1'){
-    // Force show feedback page immediately — belt-and-suspenders approach
-    // Works even if the outer startup script or window.load handler fails
-    var s = document.getElementById('feedbackHideStyle');
-    if(!s){
-      s = document.createElement('style');
-      s.id = 'feedbackHideStyle';
-      document.head.appendChild(s);
-    }
-    s.textContent = '#loginPage{display:none!important}#mainApp{display:none!important}#feedbackPage{display:flex!important}';
-    // Pre-fill location immediately from URL params
-    window._fbBuilding = decodeURIComponent(p.get('b')||'');
-    window._fbFloor    = decodeURIComponent(p.get('f')||'');
-    // Run init as soon as DOM is ready (don't wait for window.load)
-    document.addEventListener('DOMContentLoaded', function(){
-      var loc = document.getElementById('fbLocation');
-      if(loc) loc.textContent = (window._fbBuilding||'') + (window._fbFloor ? ' \u2014 ' + window._fbFloor : '');
-      var fp = document.getElementById('feedbackPage');
-      if(fp){ fp.dataset.building = window._fbBuilding; fp.dataset.floor = window._fbFloor; fp.dataset.staff=''; fp.classList.add('active'); }
-      document.getElementById('loginPage').style.display='none';
-      document.getElementById('mainApp').style.display='none';
-    });
-  }
-})();
-</script>
 <div id="feedbackPage">
   <div class="fb-card">
     <div id="fbForm">
