@@ -237,6 +237,7 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .item-room{font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
 .iname{font-size:14px;line-height:1.4;}
 .iname.chk{color:var(--text-muted);text-decoration:line-through;}
+.item-ts{font-size:11px;color:var(--teal);font-weight:600;margin-top:3px;letter-spacing:.2px;}
 .item-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .istatus{font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;}
 .istatus.done{background:#E8F8EE;color:#27AE60;}
@@ -1961,7 +1962,18 @@ function renderFloorItems() {
   let itemsHtml = '';
   for (let i=0; i<filtered.length; i++) {
     const origIdx = items.indexOf(filtered[i]);
-    const isChk = !!checked[origIdx];
+    const chkVal  = checked[origIdx];
+    const isChk   = !!chkVal;
+    // chkVal may be true (legacy) or an ISO timestamp string
+    let tsLabel = '';
+    if (isChk && typeof chkVal === 'string') {
+      try {
+        const d = new Date(chkVal);
+        const hh = String(d.getHours()).padStart(2,'0');
+        const mm = String(d.getMinutes()).padStart(2,'0');
+        tsLabel = hh + ':' + mm;
+      } catch(e) {}
+    }
     const note = getNote(bk, currentFloor, origIdx, viewingDate);
     const isWR = isWashroom(filtered[i].name);
     const freq = isWR ? getFreq(bk, currentFloor, origIdx, viewingDate) : [];
@@ -1981,6 +1993,7 @@ function renderFloorItems() {
         <div class="item-body">
           ${filtered[i].room?`<div class="item-room">${filtered[i].room}</div>`:''}
           <div class="iname ${isChk?'chk':''}">${filtered[i].name}</div>
+          ${isChk && tsLabel ? `<div class="item-ts">✅ Checked at ${tsLabel}</div>` : ''}
         </div>
         <div class="item-actions">
           <span class="istatus ${isChk?'done':'pend'}">${isChk?'Done':'Pending'}</span>
@@ -2384,12 +2397,16 @@ function renderOuterAreas() {
 function toggleItem(idx) {
   if(!canEdit()){showToast('🔒 Editing disabled for this date');return;}
   const checked = getChecked(currentBuilding, currentFloor, viewingDate);
-  checked[idx] = !checked[idx];
+  if(checked[idx]) {
+    delete checked[idx];
+  } else {
+    checked[idx] = new Date().toISOString();
+  }
   setChecked(currentBuilding, currentFloor, checked, viewingDate);
   renderFloorContent();
   updateSummaryBar();
   refreshInfoPanels();
-  showToast(checked[idx]?'✅ Done':'↩ Pending');
+  showToast(checked[idx] ? '✅ Done' : '↩ Pending');
 }
 function toggleExtra(cat, idx) {
   if(!canEdit()){showToast('🔒 Editing disabled for this date');return;}

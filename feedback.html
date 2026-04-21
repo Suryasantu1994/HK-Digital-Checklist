@@ -120,7 +120,7 @@ textarea:focus{outline:none;border-color:#006B6B;background:#fff;}
   }
 
   if (window._db && building && floor) {
-    const docId = ('staff__' + building + '__' + floor + '__' + todayKey()).replace(/[/ ]/g, '_');
+    const docId = 'staff__' + building + '__' + floor + '__' + todayKey();
     window._db.collection('staff').doc(docId).get().then(function(snap) {
       if (snap.exists) {
         const data = snap.data();
