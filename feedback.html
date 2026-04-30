@@ -119,9 +119,16 @@ textarea:focus{outline:none;border-color:#006B6B;background:#fff;}
     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   }
 
+  // Build Firestore doc ID exactly matching the main app's _fsId('staff', building, floor, date)
+  function fsId() {
+    return Array.prototype.slice.call(arguments).join('__').replace(/[/ ]/g, '_').substring(0, 500);
+  }
+
   if (window._db && building && floor) {
-    const docId = ('staff__' + building + '__' + floor + '__' + todayKey()).replace(/[/ ]/g, '_');
+    const docId = fsId('staff', building, floor, todayKey());
+    console.log('[feedback] Loading staff from doc:', docId);
     window._db.collection('staff').doc(docId).get().then(function(snap) {
+      console.log('[feedback] Staff doc exists:', snap.exists, snap.exists ? snap.data() : 'N/A');
       if (snap.exists) {
         const data = snap.data();
         const names = (data && Array.isArray(data.staff)) ? data.staff.filter(Boolean) : [];
@@ -129,9 +136,17 @@ textarea:focus{outline:none;border-color:#006B6B;background:#fff;}
           document.getElementById('staffChips').innerHTML =
             names.map(n => '<span class="staff-chip">' + n + '</span>').join('');
           document.getElementById('staffWrap').style.display = 'block';
+        } else {
+          console.log('[feedback] Staff doc found but staff array is empty');
         }
+      } else {
+        console.log('[feedback] No staff doc found for today — staff section hidden');
       }
-    }).catch(function(){});
+    }).catch(function(err) {
+      console.error('[feedback] Staff load error:', err.code, err.message);
+    });
+  } else {
+    console.log('[feedback] Skipping staff load — db:', !!window._db, 'building:', building, 'floor:', floor);
   }
 
   function setStar(n) {

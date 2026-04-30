@@ -361,6 +361,17 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .fb-stat-lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
 .fb-star-avg{font-size:28px;color:#F5B301;font-weight:700;}
 .fb-entry{padding:12px 16px;border-bottom:1px solid var(--bg);font-size:13px;}
+.fb-reply-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--teal-dark);cursor:pointer;margin-top:8px;transition:all .15s;}
+.fb-reply-btn:hover{background:var(--teal-light);border-color:var(--teal);}
+.fb-reply-box{margin-top:8px;display:none;}
+.fb-reply-box.open{display:block;}
+.fb-reply-box textarea{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;min-height:70px;background:var(--bg);}
+.fb-reply-box textarea:focus{outline:none;border-color:var(--teal);}
+.fb-reply-box .fb-reply-send{background:var(--teal-dark);color:#fff;border:none;border-radius:8px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer;margin-top:6px;}
+.fb-reply-box .fb-reply-send:hover{background:var(--teal);}
+.fb-reply-existing{margin-top:8px;padding:8px 12px;background:#E8F5F5;border-left:3px solid var(--teal);border-radius:0 8px 8px 0;font-size:12px;}
+.fb-reply-existing .fb-reply-label{font-weight:700;color:var(--teal-dark);font-size:11px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.fb-reply-existing .fb-reply-text{color:#1A2E2E;line-height:1.5;}
 .fb-entry:last-child{border-bottom:none;}
 .fb-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
 .fb-entry-loc{font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.5px;}
@@ -3383,13 +3394,19 @@ function getAllFeedback() {
 }
 
 // Load feedback from Firestore into localStorage cache
-async function loadFeedbackFromFirestore() {
+async function loadFeedbackFromFirestore(force) {
   var db = _getDb();
   if (!db) return;
+  // Cache guard — skip Firestore read if data is less than 5 minutes old
+  var CACHE_MS = 5 * 60 * 1000;
+  var lastFetch = parseInt(localStorage.getItem('gitam_feedback_fetched_at') || '0', 10);
+  if (!force && Date.now() - lastFetch < CACHE_MS) return;
   try {
-    const qs = await db.collection('feedback').orderBy('ts', 'desc').get();
+    // Limit to latest 300 entries — avoids reading entire collection every time
+    const qs = await db.collection('feedback').orderBy('ts', 'desc').limit(300).get();
     const entries = qs.docs.map(function(d){ return Object.assign({}, d.data(), {_id: d.id}); });
     localStorage.setItem(feedbackStorageKey(), JSON.stringify(entries));
+    localStorage.setItem('gitam_feedback_fetched_at', String(Date.now()));
   } catch(e) { console.warn('Could not load feedback:', e); }
 }
 
@@ -3397,8 +3414,14 @@ async function saveFeedbackEntry(entry) {
   var db = _getDb();
   if (db) {
     try {
-      await db.collection('feedback').add(entry);
-      await loadFeedbackFromFirestore();
+      const ref = await db.collection('feedback').add(entry);
+      // Add to local cache immediately — no need to re-read all from Firestore
+      entry._id = ref.id;
+      const all = getAllFeedback();
+      all.unshift(entry);
+      localStorage.setItem(feedbackStorageKey(), JSON.stringify(all));
+      // Mark cache as fresh so next load doesn't re-fetch unnecessarily
+      localStorage.setItem('gitam_feedback_fetched_at', String(Date.now()));
       return;
     } catch(e) { console.warn('Firestore feedback save failed:', e); }
   }
@@ -3467,7 +3490,8 @@ function showFeedbackAdmin() {
   setActiveTab('feedback');
   const content = document.getElementById('mainContent');
   content.innerHTML = renderFeedbackAdminHtml();
-  refreshFeedbackList();
+  // Force-refresh from Firestore when admin opens the tab (once per session visit)
+  loadFeedbackFromFirestore(true).then(function(){ refreshFeedbackList(); }).catch(function(){ refreshFeedbackList(); });
 }
 
 // ── SUPERVISOR ALLOCATION ─────────────────────────────────────────────────────
@@ -4454,7 +4478,7 @@ function refreshFeedbackList() {
     wrap.innerHTML = '<div class="fb-empty">No feedback entries found.</div>';
     return;
   }
-  wrap.innerHTML = all.map(e => {
+  wrap.innerHTML = all.map((e, idx) => {
     const staffHtml = (e.staff && e.staff.length)
       ? '<div class="fb-entry-staff">&#x1F477; ' + e.staff.join(', ') + '</div>'
       : '';
@@ -4466,7 +4490,6 @@ function refreshFeedbackList() {
       : '';
     const _eStarColor = e.rating <= 2 ? '#C0392B' : e.rating === 3 ? '#2980B9' : e.rating === 4 ? '#D4A843' : '#27AE60';
     const _eStarEmoji = {1:'😡',2:'😞',3:'😐',4:'😊',5:'😄'}[e.rating] || '';
-    // Format time from ISO timestamp
     const _eTimeStr = (function() {
       if (!e.ts) return '';
       try {
@@ -4475,13 +4498,23 @@ function refreshFeedbackList() {
         return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
       } catch(err) { return ''; }
     })();
-    return `<div class="fb-entry">
+    const safeId = (e._id || ('idx_' + idx)).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const replyHtml = e.reply
+      ? `<div class="fb-reply-existing"><div class="fb-reply-label">💬 Admin Reply</div><div class="fb-reply-text">${e.reply}</div></div>`
+      : '';
+    const replyBtnLabel = e.reply ? '✏️ Edit Reply' : '💬 Reply';
+    return `<div class="fb-entry" id="fb-entry-${safeId}">
       <div class="fb-entry-hdr">
         <span class="fb-entry-loc">${e.building} — ${e.floor}</span>
         <span class="fb-entry-stars" style="color:${_eStarColor}">${'★'.repeat(e.rating)}${'☆'.repeat(5-e.rating)} ${_eStarEmoji}</span>
         <span class="fb-entry-time">${e.date || e.ts.slice(0,10)}${_eTimeStr ? '<span class="fb-entry-clock">🕐 ' + _eTimeStr + '</span>' : ''}</span>
       </div>
-      ${metaHtml}${staffHtml}${commentHtml}
+      ${metaHtml}${staffHtml}${commentHtml}${replyHtml}
+      <button class="fb-reply-btn" onclick="toggleReplyBox('${safeId}')">${replyBtnLabel}</button>
+      <div class="fb-reply-box" id="fb-reply-box-${safeId}">
+        <textarea id="fb-reply-text-${safeId}" placeholder="Type your reply here…">${e.reply || ''}</textarea>
+        <button class="fb-reply-send" onclick="sendReply('${safeId}','${(e._id||'').replace(/'/g,"\\'")}')">✅ Send Reply</button>
+      </div>
     </div>`;
   }).join('');
 }
@@ -4489,8 +4522,8 @@ function refreshFeedbackList() {
 function exportFeedbackCsv() {
   const all = getAllFeedback();
   if (!all.length) { showToast('No feedback to export'); return; }
-  const rows = [['Date','Building','Floor','Room No.','User ID','Name','Staff','Rating','Comment']];
-  all.forEach(e => rows.push([e.date || e.ts.slice(0,10), e.building, e.floor, e.roomNo||'', e.userId||'', e.userName||'', (e.staff||[]).join(' | '), e.rating, (e.comment||'').replace(/,/g,' ')]));
+  const rows = [['Date','Building','Floor','Room No.','User ID','Name','Staff','Rating','Comment','Reply']];
+  all.forEach(e => rows.push([e.date || e.ts.slice(0,10), e.building, e.floor, e.roomNo||'', e.userId||'', e.userName||'', (e.staff||[]).join(' | '), e.rating, (e.comment||'').replace(/,/g,' '), (e.reply||'').replace(/,/g,' ')]));
   const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
   const blob = new Blob([csv], {type:'text/csv'});
   const a = document.createElement('a');
@@ -4498,6 +4531,43 @@ function exportFeedbackCsv() {
   a.download = 'GITAM_Floor_Feedback.csv';
   a.click();
   showToast('📥 CSV exported!');
+}
+
+function toggleReplyBox(safeId) {
+  const box = document.getElementById('fb-reply-box-' + safeId);
+  if (!box) return;
+  box.classList.toggle('open');
+  if (box.classList.contains('open')) {
+    const ta = document.getElementById('fb-reply-text-' + safeId);
+    if (ta) ta.focus();
+  }
+}
+
+async function sendReply(safeId, docId) {
+  const ta = document.getElementById('fb-reply-text-' + safeId);
+  if (!ta) return;
+  const replyText = ta.value.trim();
+  if (!replyText) { showToast('⚠️ Reply cannot be empty'); return; }
+
+  // Update in Firestore
+  const db = _getDb();
+  if (db && docId) {
+    try {
+      await db.collection('feedback').doc(docId).update({ reply: replyText });
+    } catch(e) { console.warn('Reply save failed:', e); }
+  }
+
+  // Update local cache
+  const all = getAllFeedback();
+  const entry = all.find(function(e){ return e._id === docId; });
+  if (entry) {
+    entry.reply = replyText;
+    localStorage.setItem(feedbackStorageKey(), JSON.stringify(all));
+  }
+
+  showToast('✅ Reply saved!');
+  // Refresh the list to show updated reply
+  refreshFeedbackList();
 }
 
 
@@ -4590,48 +4660,63 @@ function initNotifications() {
   const btn = document.getElementById('notifBtn');
   if (btn) btn.style.display = 'flex';
 
-  // Restore any cached alerts from localStorage immediately
+  // Restore any cached alerts from localStorage immediately — zero reads
   _renderNotifPanel();
   _updateNotifBadge();
 
-  // Start live Firestore listener for new 1★ / 2★ entries
-  const db = _getDb();
-  if (!db) return;
+  // Cancel any existing polling timer
+  if (_notifUnsubscribe) { try { clearInterval(_notifUnsubscribe); } catch(e) {} }
 
-  // Unsubscribe previous listener if any (e.g. after re-login)
-  if (_notifUnsubscribe) { try { _notifUnsubscribe(); } catch(e) {} }
+  // Poll for NEW low-rating feedback every 3 minutes
+  // Uses a timestamp filter so only NEW docs since last check are read — not the whole collection
+  var POLL_MS = 3 * 60 * 1000;
+  var NOTIF_LAST_CHECK_KEY = 'gitam_notif_last_check';
 
-  // Listen to feedback docs with rating ≤ 2, ordered by timestamp desc
-  _notifUnsubscribe = db.collection('feedback')
-    .where('rating', '<=', 2)
-    .orderBy('rating')
-    .orderBy('ts', 'desc')
-    .onSnapshot(function(qs) {
-      const seenIds  = _getSeenIds();
-      const existing = _getAlerts();
-      const existingIds = new Set(existing.map(function(a){ return a._id; }));
+  function pollNewAlerts() {
+    const db = _getDb();
+    if (!db) return;
+    var lastCheck = localStorage.getItem(NOTIF_LAST_CHECK_KEY) || new Date(Date.now() - 7*24*60*60*1000).toISOString();
 
-      var hasNew = false;
-      qs.docs.forEach(function(doc) {
-        const id = doc.id;
-        if (seenIds.has(id) || existingIds.has(id)) return; // already cleared or cached
-        const data = Object.assign({}, doc.data(), { _id: id });
-        existing.unshift(data); // newest first
-        hasNew = true;
-      });
-
-      if (hasNew) {
-        _saveAlerts(existing);
-        _renderNotifPanel();
-        _updateNotifBadge();
-        // Subtle shake animation on the bell
-        const btn = document.getElementById('notifBtn');
-        if (btn) {
-          btn.style.animation = 'none';
-          setTimeout(function(){ btn.style.animation = 'notifShake .5s ease'; }, 10);
+    // Simple query — no composite index needed.
+    // Fetch only the latest 50 feedback docs, filter low-rating client-side.
+    // This avoids the Firestore composite index requirement on (ts + rating).
+    db.collection('feedback')
+      .orderBy('ts', 'desc')
+      .limit(50)
+      .get()
+      .then(function(qs) {
+        localStorage.setItem(NOTIF_LAST_CHECK_KEY, new Date().toISOString());
+        if (qs.empty) return;
+        const seenIds  = _getSeenIds();
+        const existing = _getAlerts();
+        const existingIds = new Set(existing.map(function(a){ return a._id; }));
+        var hasNew = false;
+        qs.docs.forEach(function(doc) {
+          const data = doc.data();
+          // Client-side filters: low rating AND newer than last check
+          if (!data.rating || data.rating > 2) return;
+          if (data.ts && data.ts <= lastCheck) return;
+          const id = doc.id;
+          if (seenIds.has(id) || existingIds.has(id)) return;
+          existing.unshift(Object.assign({}, data, { _id: id }));
+          hasNew = true;
+        });
+        if (hasNew) {
+          _saveAlerts(existing);
+          _renderNotifPanel();
+          _updateNotifBadge();
+          const btn = document.getElementById('notifBtn');
+          if (btn) {
+            btn.style.animation = 'none';
+            setTimeout(function(){ btn.style.animation = 'notifShake .5s ease'; }, 10);
+          }
         }
-      }
-    }, function(err) { console.warn('Notif listener error:', err); });
+      }).catch(function(err) { console.warn('Notif poll error:', err); });
+  }
+
+  // Run once immediately on login, then every 3 minutes
+  pollNewAlerts();
+  _notifUnsubscribe = setInterval(pollNewAlerts, POLL_MS);
 }
 
 function _updateNotifBadge() {
@@ -4735,10 +4820,9 @@ document.head.appendChild(_notifShakeStyle);
 
 // ── APP STARTUP ───────────────────────────────────────────────────────────────
 window.addEventListener('load', async function() {
-    // If this is a feedback/QR scan URL, show the page immediately — no Firestore wait needed to render the form
+    // If this is a feedback/QR scan URL, show the page immediately — no Firestore reads needed
     if (new URLSearchParams(window.location.search).get('feedback') === '1') {
       initFeedbackPage();
-      try { await Promise.race([loadFeedbackFromFirestore(), new Promise(r=>setTimeout(r,4000))]); } catch(e){}
       return;
     }
     // Normal app startup — pre-load Firestore data
