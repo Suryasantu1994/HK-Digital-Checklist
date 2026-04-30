@@ -99,6 +99,10 @@ textarea:focus{outline:none;border-color:#006B6B;background:#fff;}
     <div class="tick">✅</div>
     <h3>Thank You!</h3>
     <p>Your feedback has been recorded.<br>It helps us maintain cleanliness standards at GITAM University.</p>
+    <div id="adminReplyWrap" style="display:none;margin-top:18px;padding:14px 16px;background:#E8F8EE;border:1px solid #A8E6C0;border-radius:10px;text-align:left;">
+      <div style="font-size:11px;font-weight:700;color:#148045;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">💬 Admin Reply</div>
+      <div id="adminReplyText" style="font-size:13px;color:#1A6B35;line-height:1.6;"></div>
+    </div>
   </div>
 </div>
 
@@ -119,16 +123,9 @@ textarea:focus{outline:none;border-color:#006B6B;background:#fff;}
     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   }
 
-  // Build Firestore doc ID exactly matching the main app's _fsId('staff', building, floor, date)
-  function fsId() {
-    return Array.prototype.slice.call(arguments).join('__').replace(/[/ ]/g, '_').substring(0, 500);
-  }
-
   if (window._db && building && floor) {
-    const docId = fsId('staff', building, floor, todayKey());
-    console.log('[feedback] Loading staff from doc:', docId);
+    const docId = ('staff__' + building + '__' + floor + '__' + todayKey()).replace(/[/ ]/g, '_');
     window._db.collection('staff').doc(docId).get().then(function(snap) {
-      console.log('[feedback] Staff doc exists:', snap.exists, snap.exists ? snap.data() : 'N/A');
       if (snap.exists) {
         const data = snap.data();
         const names = (data && Array.isArray(data.staff)) ? data.staff.filter(Boolean) : [];
@@ -136,17 +133,9 @@ textarea:focus{outline:none;border-color:#006B6B;background:#fff;}
           document.getElementById('staffChips').innerHTML =
             names.map(n => '<span class="staff-chip">' + n + '</span>').join('');
           document.getElementById('staffWrap').style.display = 'block';
-        } else {
-          console.log('[feedback] Staff doc found but staff array is empty');
         }
-      } else {
-        console.log('[feedback] No staff doc found for today — staff section hidden');
       }
-    }).catch(function(err) {
-      console.error('[feedback] Staff load error:', err.code, err.message);
-    });
-  } else {
-    console.log('[feedback] Skipping staff load — db:', !!window._db, 'building:', building, 'floor:', floor);
+    }).catch(function(){});
   }
 
   function setStar(n) {
@@ -205,7 +194,16 @@ textarea:focus{outline:none;border-color:#006B6B;background:#fff;}
 
     try {
       if (window._db) {
-        await window._db.collection('feedback').add(entry);
+        const docRef = await window._db.collection('feedback').add(entry);
+        // Listen for an admin reply on this doc
+        docRef.onSnapshot(function(snap) {
+          if (!snap.exists) return;
+          const d = snap.data();
+          if (d && d.reply) {
+            document.getElementById('adminReplyText').textContent = d.reply;
+            document.getElementById('adminReplyWrap').style.display = 'block';
+          }
+        });
       } else {
         throw new Error('No DB');
       }
