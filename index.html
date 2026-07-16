@@ -488,6 +488,17 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .pending-entry:last-child{border-bottom:none;}
 .pending-dot{width:8px;height:8px;border-radius:50%;background:var(--orange);flex-shrink:0;margin-top:5px;}
 .pending-entry-loc{font-size:10px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:1px;}
+/* Supervisor daily task completion chart */
+.sup-chart-card{background:var(--white);border-radius:14px;padding:20px 22px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:24px;}
+.sup-chart-title{font-size:11px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;}
+.sup-chart-row{display:flex;align-items:center;gap:10px;margin-bottom:11px;}
+.sup-chart-row:last-child{margin-bottom:0;}
+.sup-chart-label{width:150px;font-size:13px;font-weight:600;color:var(--text);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sup-chart-track{flex:1;height:14px;background:var(--bg);border-radius:7px;overflow:hidden;border:1px solid var(--border);}
+.sup-chart-fill{height:100%;border-radius:7px;transition:width .4s ease;}
+.sup-chart-pct{width:100px;text-align:right;font-size:12px;font-weight:700;color:var(--text);flex-shrink:0;}
+.sup-chart-empty{font-size:12px;color:var(--text-muted);}
+
 /* Dashboard card notes & pending */
 .card-notes-section{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:none;}
 .card-notes-section.has-data{display:block;}
@@ -1525,6 +1536,58 @@ function getFloorProgress(bk, fn, date) {
   return {total: items.length, done, pct: items.length ? Math.round(done/items.length*100) : 0};
 }
 
+// Aggregate daily checklist completion % per supervisor, based on the buildings
+// each supervisor is assigned to for the given date (uses supervisor allocation
+// cache, so supLoadData/preloadBuildingData should already have run for this date).
+function getSupervisorCompletionForDate(date) {
+  const BUILDINGS = getBuildings();
+  const buildingKeys = Object.keys(BUILDINGS);
+  const [y, mo, d] = date.split('-').map(Number);
+  const dt = new Date(y, mo - 1, d);
+  const dk = supDateKey(dt);
+  const rows = _supCache[dk] || [];
+  const viewDay = SUP_DAYS[dt.getDay()];
+
+  const result = [];
+  rows.forEach(row => {
+    const isOff = (row.weekOff || []).includes(viewDay);
+    const locs = (row.locations || []).map(l => l.toUpperCase());
+    let total = 0, done = 0;
+    buildingKeys.forEach(bk => {
+      const bName = BUILDINGS[bk].name.toUpperCase();
+      if (locs.includes(bName)) {
+        const p = getBuildingProgress(bk, date);
+        total += p.total;
+        done += p.done;
+      }
+    });
+    if (total > 0) {
+      result.push({ supervisor: row.supervisor, isOff, total, done, pct: Math.round(done/total*100) });
+    }
+  });
+  result.sort((a, b) => b.pct - a.pct);
+  return result;
+}
+
+function supervisorChartHtml(date) {
+  const data = getSupervisorCompletionForDate(date);
+  if (!data.length) {
+    return `<div class="sup-chart-card"><div class="sup-chart-title">👷 Supervisor Daily Task Completion</div><div class="sup-chart-empty">No supervisor allocation found for this date.</div></div>`;
+  }
+  const bars = data.map(s => {
+    const color = s.pct >= 90 ? 'var(--green)' : s.pct >= 70 ? 'var(--teal)' : s.pct >= 50 ? 'var(--orange)' : 'var(--red)';
+    return `<div class="sup-chart-row">
+      <div class="sup-chart-label" title="${s.supervisor}">${s.supervisor}${s.isOff?' <span style="font-size:9px;font-weight:700;color:var(--orange)">(Off)</span>':''}</div>
+      <div class="sup-chart-track"><div class="sup-chart-fill" style="width:${s.pct}%;background:${color}"></div></div>
+      <div class="sup-chart-pct">${s.pct}% <span style="color:var(--text-muted);font-weight:400">(${s.done}/${s.total})</span></div>
+    </div>`;
+  }).join('');
+  return `<div class="sup-chart-card">
+    <div class="sup-chart-title">👷 Supervisor Daily Task Completion</div>
+    ${bars}
+  </div>`;
+}
+
 // ── DATE STRIP HTML ───────────────────────────────────────────────────────────
 function dateStripHtml(context) {
   const isAdmin = currentUser.role === 'admin';
@@ -1664,18 +1727,6 @@ function showDashboard_render() {
         <div style="font-size:10px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">📋 Item Notes</div>
         ${notesCardHtml}
       </div>
-      <div class="card-notes-section ${pending.length?'has-data':''}">
-        <div style="font-size:10px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">⏳ Pending Tasks</div>
-        ${pendingCardHtml || (!extraPending.length && !outerPending.length ? '<div style="font-size:11px;color:var(--green)">✅ All daily tasks done!</div>' : '')}
-      </div>
-      <div class="card-notes-section ${extraPending.length?'has-data':''}">
-        <div style="font-size:10px;font-weight:700;color:#9A6F00;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">✨ Extra Schedule Pending</div>
-        ${extraPendingCardHtml || '<div style="font-size:11px;color:var(--green)">✅ All extra tasks done!</div>'}
-      </div>
-      <div class="card-notes-section ${outerPending.length?'has-data':''}">
-        <div style="font-size:10px;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">🌿 Outer Areas Pending</div>
-        ${outerPendingCardHtml || '<div style="font-size:11px;color:var(--green)">✅ All outer tasks done!</div>'}
-      </div>
     </div>`;
   }
 
@@ -1696,6 +1747,7 @@ function showDashboard_render() {
       </div>
     </div>
     ${dateStripHtml('dash')}
+    ${supervisorChartHtml(viewingDate)}
     <div style="font-size:11px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:1px;margin:24px 0 12px;">📋 Building Progress</div>
     <div class="summary-cards">${cards}</div>`;
 }
