@@ -1015,9 +1015,21 @@ async function preloadBuildingData(building, date) {
       var docId = _fsId('cl', building, fn, date);
       var lsKey = stateKey(building, fn, date);
       return db.collection('checklist').doc(docId).get().then(function(snap) {
-        if (snap.exists) {
-          localStorage.setItem(lsKey, JSON.stringify(snap.data().checked || {}));
-        }
+        if (!snap.exists) return;
+        var data = snap.data();
+        localStorage.setItem(lsKey, JSON.stringify(data.checked || {}));
+        // Notes and freq logs now live as maps inside this same checklist doc
+        // (folded in to avoid one Firestore read per item).
+        var notesMap = data.notes || {};
+        Object.keys(notesMap).forEach(function(idx) {
+          if (notesMap[idx]) localStorage.setItem(noteKey(building, fn, idx, date), notesMap[idx]);
+        });
+        var freqMap = data.freq || {};
+        Object.keys(freqMap).forEach(function(idx) {
+          if (freqMap[idx] && freqMap[idx].length) {
+            localStorage.setItem(freqKey(building, fn, idx, date), JSON.stringify(freqMap[idx]));
+          }
+        });
       }).catch(function(){});
     });
 
@@ -1036,41 +1048,6 @@ async function preloadBuildingData(building, date) {
       }).catch(function(){});
     });
 
-    // Notes for all regular floors
-    var noteReads = [];
-    Object.keys(b.floors).forEach(function(fn) {
-      var items = b.floors[fn] || [];
-      items.forEach(function(_, idx) {
-        noteReads.push(
-          db.collection('notes').doc(_fsId('note', building, fn, String(idx), date)).get()
-            .then(function(snap) {
-              if (snap.exists) {
-                var val = snap.data().note || '';
-                if (val) localStorage.setItem(noteKey(building, fn, idx, date), val);
-              }
-            }).catch(function(){})
-        );
-      });
-    });
-
-    // Freq logs for washroom items
-    var freqReads = [];
-    Object.keys(b.floors).forEach(function(fn) {
-      var items = b.floors[fn] || [];
-      items.forEach(function(item, idx) {
-        if (isWashroom(item.name)) {
-          freqReads.push(
-            db.collection('freq').doc(_fsId('freq', building, fn, String(idx), date)).get()
-              .then(function(snap) {
-                if (snap.exists) {
-                  localStorage.setItem(freqKey(building, fn, idx, date), JSON.stringify(snap.data().times || []));
-                }
-              }).catch(function(){})
-          );
-        }
-      });
-    });
-
     // Staff names list for this building (global, not date-specific)
     var staffNamesRead = db.collection('staffNames').doc(_fsId('staffNames', building)).get()
       .then(function(snap) {
@@ -1079,7 +1056,7 @@ async function preloadBuildingData(building, date) {
         }
       }).catch(function(){});
 
-    await Promise.all(reads.concat(staffReads).concat(noteReads).concat(freqReads).concat([staffNamesRead]));
+    await Promise.all(reads.concat(staffReads).concat([staffNamesRead]));
   } catch(e) {
     console.warn('Preload error:', e);
   }
@@ -1109,9 +1086,10 @@ function getNote(building, floor, idx, date) {
 function setNote(building, floor, idx, val, date) {
   var lsKey = noteKey(building, floor, idx, date);
   var d = date || viewingDate;
-  _fsWrite('notes', _fsId('note', building, floor, String(idx), d),
-    { note: val || '', building: building, floor: floor, idx: idx, date: d },
-    lsKey, val || null);
+  var docId = _fsId('cl', building, floor, d);
+  var data = {};
+  data['notes.' + idx] = val || '';
+  _fsWrite('checklist', docId, data, lsKey, val || null);
 }
 
 // ── REMARKS ────────────────────────────────────────────────────────────────
@@ -1160,9 +1138,10 @@ function getFreq(building, floor, idx, date) {
 function setFreq(building, floor, idx, arr, date) {
   var lsKey = freqKey(building, floor, idx, date);
   var d = date || viewingDate;
-  _fsWrite('freq', _fsId('freq', building, floor, String(idx), d),
-    { times: arr || [], building: building, floor: floor, idx: idx, date: d },
-    lsKey, (arr && arr.length) ? arr : null);
+  var docId = _fsId('cl', building, floor, d);
+  var data = {};
+  data['freq.' + idx] = arr || [];
+  _fsWrite('checklist', docId, data, lsKey, (arr && arr.length) ? arr : null);
 }
 
 
