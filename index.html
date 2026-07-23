@@ -5637,7 +5637,16 @@ window.addEventListener('load', async function() {
     }
     // Normal app startup — pre-load Firestore data
     try { await Promise.race([loadCustomTasksFromFirestore(), new Promise(r=>setTimeout(r,4000))]); } catch(e){}
-    try { await Promise.race([loadFeedbackFromFirestore(),    new Promise(r=>setTimeout(r,4000))]); } catch(e){}
+    try {
+      const feedbackLoadPromise = loadFeedbackFromFirestore().then(function(){
+        // Firestore data may arrive after the 4s race below times out (e.g. slow
+        // network or a large feedback collection). If it does, refresh the
+        // dashboard so counts like "Total Feedback" reflect the real numbers
+        // instead of a stale/partial localStorage cache.
+        if (currentView === 'dashboard') showDashboard();
+      });
+      await Promise.race([feedbackLoadPromise, new Promise(r=>setTimeout(r,4000))]);
+    } catch(e){}
     supLoadData(supViewDate);
 
     // ── Restore session after browser refresh ──────────────────────────────
