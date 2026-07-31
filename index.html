@@ -1924,7 +1924,7 @@ function getSupervisorCompletionForDate(date) {
 }
 
 function supervisorChartHtml(date) {
-  const data = getSupervisorCompletionForDate(date);
+  const data = getSupervisorCompletionForDate(date).filter(s => !s.isOff);
   if (!data.length) {
     return `<div class="sup-chart-card"><div class="sup-chart-title">👷 Supervisor Daily Task Completion</div><div class="sup-chart-empty">No supervisor allocation found for this date.</div></div>`;
   }
@@ -1948,7 +1948,7 @@ function _spscStars(pct) {
 }
 
 function supervisorScorecardHtml(date) {
-  const data = getSupervisorCompletionForDate(date);
+  const data = getSupervisorCompletionForDate(date).filter(s => !s.isOff);
   if (!data.length) {
     return `<div class="spsc-card"><div class="spsc-hdr"><div class="spsc-title">📊 Supervisor Performance Scorecard</div></div><div class="spsc-empty">No supervisor allocation found for this date.</div></div>`;
   }
