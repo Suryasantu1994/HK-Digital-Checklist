@@ -502,6 +502,18 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .btn-responses{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:13px;font-weight:600;color:var(--teal);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;display:inline-flex;align-items:center;gap:4px;}
 .btn-responses:hover{background:var(--teal-pale);border-color:var(--teal);}
 
+/* FLOOR SIGNATURE */
+.sig-box{background:var(--white);border-radius:12px;padding:16px 20px;margin-top:20px;box-shadow:var(--shadow);border:1px solid var(--border);}
+.sig-box-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
+.sig-box-hdr label{font-size:12px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.5px;}
+.sig-box-actions{display:flex;gap:8px;}
+.sig-canvas-wrap{border:2px dashed var(--border);border-radius:8px;background:#FAFAFA;cursor:crosshair;position:relative;touch-action:none;}
+.sig-canvas-wrap canvas{display:block;width:100%;height:120px;}
+.sig-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:13px;pointer-events:none;}
+.sig-meta{font-size:11px;color:var(--text-muted);margin-top:6px;}
+.sig-saved-indicator{font-size:11px;color:var(--green);font-weight:600;margin-top:4px;display:none;}
+.sig-saved-indicator.visible{display:block;}
+
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
@@ -2821,6 +2833,40 @@ function renderFloorContent() {
           <div class="cl-search"><input type="search" id="searchInput" placeholder="Search items or room numbers..." value="${searchQuery}" oninput="handleSearch(this.value)"></div>
         </div>
         <div class="cl-items" id="clItemsList"></div>
+        <div class="no-print" id="sigBox" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;">
+          <!-- Floor Supervisor Signature -->
+          <div class="sig-box" style="margin-top:0;">
+            <div class="sig-box-hdr">
+              <label>✍️ Floor Supervisor Signature</label>
+              <div class="sig-box-actions">
+                <button class="btn btn-s" style="font-size:11px;padding:4px 10px;" onclick="clearFloorSig('fs')">🗑 Clear</button>
+                <button class="btn btn-p" style="font-size:11px;padding:4px 10px;" onclick="saveFloorSig('fs')">💾 Save</button>
+              </div>
+            </div>
+            <div class="sig-canvas-wrap" id="sigCanvasWrap">
+              <canvas id="sigCanvas" height="120"></canvas>
+              <div class="sig-placeholder" id="sigPlaceholder">Sign here…</div>
+            </div>
+            <div class="sig-saved-indicator" id="sigSavedIndicator">✅ Signature saved</div>
+            <div class="sig-meta" id="sigMeta"></div>
+          </div>
+          <!-- Building Manager Signature -->
+          <div class="sig-box" style="margin-top:0;">
+            <div class="sig-box-hdr">
+              <label>✍️ Building Manager Signature</label>
+              <div class="sig-box-actions">
+                <button class="btn btn-s" style="font-size:11px;padding:4px 10px;" onclick="clearFloorSig('bm')">🗑 Clear</button>
+                <button class="btn btn-p" style="font-size:11px;padding:4px 10px;" onclick="saveFloorSig('bm')">💾 Save</button>
+              </div>
+            </div>
+            <div class="sig-canvas-wrap" id="sigCanvasWrapBM">
+              <canvas id="sigCanvasBM" height="120"></canvas>
+              <div class="sig-placeholder" id="sigPlaceholderBM">Sign here…</div>
+            </div>
+            <div class="sig-saved-indicator" id="sigSavedIndicatorBM">✅ Signature saved</div>
+            <div class="sig-meta" id="sigMetaBM"></div>
+          </div>
+        </div>
       </div>`;
     renderStaffInline(bk, currentFloor);
   } else {
@@ -2843,6 +2889,8 @@ function renderFloorContent() {
   }
 
   renderFloorItems();
+  // Init signature pad after DOM is ready
+  setTimeout(function(){ initFloorSig(); }, 0);
 }
 
 function renderFloorItems() {
@@ -5732,6 +5780,128 @@ document.addEventListener('click', function(e) {
 const _notifShakeStyle = document.createElement('style');
 _notifShakeStyle.textContent = '@keyframes notifShake{0%,100%{transform:rotate(0);}20%{transform:rotate(-15deg);}40%{transform:rotate(15deg);}60%{transform:rotate(-10deg);}80%{transform:rotate(10deg);}}';
 document.head.appendChild(_notifShakeStyle);
+
+// ── FLOOR SIGNATURE ──────────────────────────────────────────────────────────
+function _sigKey(bk, fn, date, role) {
+  return 'gitam_sig_' + encodeKey(bk) + '_' + encodeKey(fn) + '_' + date + (role ? '_' + role : '');
+}
+
+function _sigIds(role) {
+  // role: 'fs' = Floor Supervisor, 'bm' = Building Manager
+  if (role === 'bm') return { canvasId:'sigCanvasBM', wrapId:'sigCanvasWrapBM', phId:'sigPlaceholderBM', indId:'sigSavedIndicatorBM', metaId:'sigMetaBM' };
+  return { canvasId:'sigCanvas', wrapId:'sigCanvasWrap', phId:'sigPlaceholder', indId:'sigSavedIndicator', metaId:'sigMeta' };
+}
+
+function _initOneSig(role) {
+  var ids = _sigIds(role);
+  var canvas = document.getElementById(ids.canvasId);
+  if (!canvas) return;
+  var wrap = document.getElementById(ids.wrapId);
+  var placeholder = document.getElementById(ids.phId);
+
+  canvas.width  = wrap.offsetWidth || 600;
+  canvas.height = 120;
+
+  var ctx = canvas.getContext('2d');
+  var drawing = false;
+
+  function getPos(e) {
+    var r = canvas.getBoundingClientRect();
+    var scaleX = canvas.width / r.width;
+    var scaleY = canvas.height / r.height;
+    var src = e.touches ? e.touches[0] : e;
+    return { x: (src.clientX - r.left) * scaleX, y: (src.clientY - r.top) * scaleY };
+  }
+  function start(e) {
+    e.preventDefault();
+    var ce = (typeof window.canEdit === 'function') ? window.canEdit() : true;
+    if (!ce) { showToast('🔒 Cannot edit for this date'); return; }
+    drawing = true;
+    var p = getPos(e);
+    ctx.beginPath(); ctx.moveTo(p.x, p.y);
+    if (placeholder) placeholder.style.display = 'none';
+  }
+  function move(e) {
+    e.preventDefault();
+    if (!drawing) return;
+    var p = getPos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.strokeStyle = 'var(--teal-dark, #004F4F)';
+    ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.stroke();
+  }
+  function end(e) { e.preventDefault(); drawing = false; }
+
+  canvas.addEventListener('mousedown',  start);
+  canvas.addEventListener('mousemove',  move);
+  canvas.addEventListener('mouseup',    end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove',  move,  { passive: false });
+  canvas.addEventListener('touchend',   end,   { passive: false });
+
+  // Load saved
+  var key = _sigKey(currentBuilding, currentFloor, viewingDate, role);
+  var saved = localStorage.getItem(key);
+  if (saved) {
+    var img = new Image();
+    img.onload = function() { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); if(placeholder) placeholder.style.display='none'; };
+    img.src = saved;
+    var meta = document.getElementById(ids.metaId);
+    var indicator = document.getElementById(ids.indId);
+    var sigData = null;
+    try { sigData = JSON.parse(localStorage.getItem(key+'_meta')); } catch(e) {}
+    if (meta && sigData) meta.textContent = 'Signed by '+(sigData.user||'—')+' on '+(sigData.ts||'');
+    if (indicator) indicator.classList.add('visible');
+  }
+}
+
+function initFloorSig() {
+  _initOneSig('fs');
+  _initOneSig('bm');
+}
+
+function saveFloorSig(role) {
+  var ids = _sigIds(role);
+  var canvas = document.getElementById(ids.canvasId);
+  if (!canvas) return;
+  if (!canEdit()) { showToast('🔒 Cannot edit for this date'); return; }
+  var dataUrl = canvas.toDataURL('image/png');
+  var blank = document.createElement('canvas');
+  blank.width = canvas.width; blank.height = canvas.height;
+  if (dataUrl === blank.toDataURL('image/png')) { showToast('✏️ Please draw a signature first'); return; }
+
+  var key = _sigKey(currentBuilding, currentFloor, viewingDate, role);
+  localStorage.setItem(key, dataUrl);
+  var ts = new Date().toLocaleString('en-IN', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  var meta = { user: currentUser ? currentUser.label : '', ts: ts };
+  localStorage.setItem(key+'_meta', JSON.stringify(meta));
+
+  var label = role === 'bm' ? 'Building Manager' : 'Floor Supervisor';
+  var indicator = document.getElementById(ids.indId);
+  var metaEl    = document.getElementById(ids.metaId);
+  if (indicator) indicator.classList.add('visible');
+  if (metaEl) metaEl.textContent = 'Signed by '+meta.user+' on '+ts;
+  showToast('✅ '+label+' signature saved for '+currentFloor);
+}
+
+function clearFloorSig(role) {
+  if (!canEdit()) { showToast('🔒 Cannot edit for this date'); return; }
+  var ids = _sigIds(role);
+  var canvas = document.getElementById(ids.canvasId);
+  if (!canvas) return;
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  var key = _sigKey(currentBuilding, currentFloor, viewingDate, role);
+  localStorage.removeItem(key);
+  localStorage.removeItem(key+'_meta');
+  var indicator = document.getElementById(ids.indId);
+  var metaEl    = document.getElementById(ids.metaId);
+  var placeholder = document.getElementById(ids.phId);
+  if (indicator) indicator.classList.remove('visible');
+  if (metaEl)    metaEl.textContent = '';
+  if (placeholder) placeholder.style.display = '';
+  showToast('🗑 Signature cleared');
+}
 
 // ── APP STARTUP ───────────────────────────────────────────────────────────────
 window.addEventListener('load', async function() {
