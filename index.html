@@ -540,6 +540,17 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .pending-entry:last-child{border-bottom:none;}
 .pending-dot{width:8px;height:8px;border-radius:50%;background:var(--orange);flex-shrink:0;margin-top:5px;}
 .pending-entry-loc{font-size:10px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:1px;}
+/* ── YESTERDAY REMARKS PANEL ── */
+.yremarks-card{background:var(--white);border-radius:14px;padding:20px 22px;box-shadow:0 2px 10px rgba(0,0,0,.06);border:1.5px solid var(--teal-mid);margin-bottom:0;}
+.yremarks-title{font-size:11px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.yremarks-date{font-size:11px;color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0;}
+.yremarks-empty{font-size:13px;color:var(--text-muted);padding:8px 0;}
+.yremark-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--bg);}
+.yremark-row:last-child{border-bottom:none;padding-bottom:0;}
+.yremark-bldg{min-width:140px;font-size:12px;font-weight:700;color:var(--teal-dark);flex-shrink:0;}
+.yremark-text{font-size:13px;color:var(--text);line-height:1.45;flex:1;}
+.yremark-none{font-size:12px;color:#B0C4C4;font-style:italic;}
+
 /* Supervisor daily task completion chart */
 .sup-chart-card{background:var(--white);border-radius:14px;padding:20px 22px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:0;}
 .sup-chart-title{font-size:11px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;}
@@ -1989,6 +2000,45 @@ function supervisorScorecardHtml(date) {
   </div>`;
 }
 
+// ── YESTERDAY'S BUILDING REMARKS (Supervisor Review) ─────────────────────────
+function yesterdayKey() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.getFullYear() + '-'
+    + String(d.getMonth() + 1).padStart(2, '0') + '-'
+    + String(d.getDate()).padStart(2, '0');
+}
+
+function yesterdayRemarksHtml() {
+  if (!currentUser || currentUser.role !== 'admin') return '';
+  const access = currentUser.access;
+  if (!access.length) return '';
+  const BUILDINGS = getBuildings();
+  const yKey = yesterdayKey();
+  const yLabel = new Date(yKey + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+  const hasAny = access.some(bk => getRemark(bk, yKey).trim().length > 0);
+
+  const rows = access.map(bk => {
+    const remark = getRemark(bk, yKey).trim();
+    const bName = BUILDINGS[bk] ? BUILDINGS[bk].name : bk;
+    return `<div class="yremark-row">
+      <div class="yremark-bldg">🏢 ${bName}</div>
+      ${remark
+        ? `<div class="yremark-text">📝 ${remark}</div>`
+        : `<div class="yremark-none">No remarks recorded</div>`}
+    </div>`;
+  }).join('');
+
+  return `<div class="yremarks-card dash-full">
+    <div class="yremarks-title">
+      📋 Yesterday's Building Remarks — Supervisor Review
+      <span class="yremarks-date">${yLabel}</span>
+    </div>
+    ${hasAny ? rows : `<div class="yremarks-empty">✅ No remarks were recorded for any building yesterday.</div>`}
+  </div>`;
+}
+
 function _fwStatus(pct) {
   if (pct >= 90) return { label: 'Excellent', color: 'var(--green)' };
   if (pct >= 70) return { label: 'Good', color: '#D4A843' };
@@ -2582,6 +2632,7 @@ function showDashboard_render() {
       </div>
     </div>
     ${dateStripHtml('dash')}
+    ${yesterdayRemarksHtml()}
     <div class="dash-grid-2col">
       ${taskStatusBreakdownHtml(viewingDate)}
       ${qrFeedbackSummaryHtml()}
@@ -2839,7 +2890,7 @@ function renderFloorContent() {
             <div class="sig-box-hdr">
               <label>✍️ Floor Supervisor Signature</label>
               <div class="sig-box-actions">
-                <button class="btn btn-s" style="font-size:11px;padding:4px 10px;" onclick="clearFloorSig('fs')">🗑 Clear</button>
+                <button id="sigClearFs" class="btn btn-s" style="font-size:11px;padding:4px 10px;" onclick="clearFloorSig('fs')">🗑 Clear</button>
                 <button class="btn btn-p" style="font-size:11px;padding:4px 10px;" onclick="saveFloorSig('fs')">💾 Save</button>
               </div>
             </div>
@@ -2855,7 +2906,7 @@ function renderFloorContent() {
             <div class="sig-box-hdr">
               <label>✍️ Building Manager Signature</label>
               <div class="sig-box-actions">
-                <button class="btn btn-s" style="font-size:11px;padding:4px 10px;" onclick="clearFloorSig('bm')">🗑 Clear</button>
+                <button id="sigClearBm" class="btn btn-s" style="font-size:11px;padding:4px 10px;" onclick="clearFloorSig('bm')">🗑 Clear</button>
                 <button class="btn btn-p" style="font-size:11px;padding:4px 10px;" onclick="saveFloorSig('bm')">💾 Save</button>
               </div>
             </div>
@@ -5859,6 +5910,12 @@ function _initOneSig(role) {
 function initFloorSig() {
   _initOneSig('fs');
   _initOneSig('bm');
+  // Only admin can clear signatures
+  var isAdmin = currentUser && currentUser.role === 'admin';
+  ['sigClearFs','sigClearBm'].forEach(function(id){
+    var btn = document.getElementById(id);
+    if (btn) btn.style.display = isAdmin ? '' : 'none';
+  });
 }
 
 function saveFloorSig(role) {
