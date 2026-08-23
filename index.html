@@ -2010,7 +2010,7 @@ function yesterdayKey() {
 }
 
 function yesterdayRemarksHtml() {
-  if (!currentUser || currentUser.role !== 'admin') return '';
+  if (!currentUser) return '';
   const access = currentUser.access;
   if (!access.length) return '';
   const BUILDINGS = getBuildings();
