@@ -1350,6 +1350,71 @@ let viewingDate = todayKey();   // the date currently being viewed
 let adminTempTasks = [];
 let adminTempFloor = null;
 
+// ── REALTIME LISTENERS ────────────────────────────────────────────────────────
+// Holds active onSnapshot unsubscribe functions keyed by Firestore doc ID
+let _realtimeUnsubs = {};
+
+function _stopAllRealtimeListeners() {
+  Object.values(_realtimeUnsubs).forEach(fn => { try { fn(); } catch(e) {} });
+  _realtimeUnsubs = {};
+}
+
+function _applyDocSnapshot(building, fn, data) {
+  const date = viewingDate;
+  // checked
+  if (data.checked) localStorage.setItem(stateKey(building, fn, date), JSON.stringify(data.checked));
+  // notes
+  const notesMap = data.notes || {};
+  Object.keys(notesMap).forEach(idx => {
+    if (notesMap[idx]) localStorage.setItem(noteKey(building, fn, idx, date), notesMap[idx]);
+    else localStorage.removeItem(noteKey(building, fn, idx, date));
+  });
+  // note timestamps
+  const noteTsMap = data.notets || {};
+  Object.keys(noteTsMap).forEach(idx => {
+    if (noteTsMap[idx]) localStorage.setItem(noteTsKey(building, fn, idx, date), noteTsMap[idx]);
+    else localStorage.removeItem(noteTsKey(building, fn, idx, date));
+  });
+  // task completion timestamps
+  const tsMap = data.ts || {};
+  Object.keys(tsMap).forEach(idx => {
+    if (tsMap[idx]) localStorage.setItem(tsKey(building, fn, idx, date), tsMap[idx]);
+    else localStorage.removeItem(tsKey(building, fn, idx, date));
+  });
+  // freq logs
+  const freqMap = data.freq || {};
+  Object.keys(freqMap).forEach(idx => {
+    if (freqMap[idx] && freqMap[idx].length)
+      localStorage.setItem(freqKey(building, fn, idx, date), JSON.stringify(freqMap[idx]));
+    else localStorage.removeItem(freqKey(building, fn, idx, date));
+  });
+}
+
+function startRealtimeListeners(bk, date) {
+  _stopAllRealtimeListeners();
+  const db = _getDb();
+  if (!db || !bk) return;
+  const BUILDINGS = getBuildings();
+  const b = BUILDINGS[bk];
+  if (!b) return;
+  const allFloors = Object.keys(b.floors);
+  allFloors.forEach(fn => {
+    const docId = _fsId('cl', bk, fn, date);
+    const unsub = db.collection('checklist').doc(docId).onSnapshot(snap => {
+      if (!snap.exists) return;
+      _applyDocSnapshot(bk, fn, snap.data());
+      // Re-render only if admin is currently viewing this building
+      if (currentBuilding === bk && currentView === 'building') {
+        if (currentFloor === fn) renderFloorItems();
+        // Always refresh floor progress bar & header
+        renderBuildingView();
+      }
+    }, err => console.warn('Realtime listener error:', fn, err));
+    _realtimeUnsubs[docId] = unsub;
+  });
+  console.log(`✅ Realtime listeners active for ${bk} (${allFloors.length} floors)`);
+}
+
 // ── DATE HELPERS ──────────────────────────────────────────────────────────────
 function todayKey() {
   const d = new Date();
@@ -2399,11 +2464,16 @@ function changeDate(val, context) {
   const asDate = new Date(y, m - 1, d);
   supLoadData(asDate);
   if(currentView === 'dashboard') showDashboard();
-  else if(currentView === 'building') renderBuildingView();
+  else if(currentView === 'building') {
+    // Restart listeners for the new date
+    if (currentUser && currentUser.role === 'admin') startRealtimeListeners(currentBuilding, val);
+    renderBuildingView();
+  }
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 async function showDashboard() {
+  _stopAllRealtimeListeners();
   currentView = 'dashboard';
   currentBuilding = null;
   setActiveTab('dashboard');
@@ -2721,11 +2791,15 @@ async function showBuilding(bk, floorName) {
   currentFloor = floorName || floorNames[0];
   // Render immediately so switching never hangs on Firebase
   renderBuildingView();
-  // Sync from Firestore (3s timeout), always re-render after to show timestamps & notes
+  // One-time preload then start realtime listeners (admin only)
   try {
     await Promise.race([preloadBuildingData(bk, viewingDate), new Promise(r => setTimeout(r, 3000))]);
   } catch(e) {}
   if (currentBuilding === bk && currentView === 'building') renderBuildingView();
+  // Start realtime onSnapshot listeners so admin sees live updates
+  if (currentUser && currentUser.role === 'admin') {
+    startRealtimeListeners(bk, viewingDate);
+  }
 }
 
 function renderBuildingView() {
@@ -4115,6 +4189,7 @@ function notesHtml(notes, maxShow) {
   let h = shown.map(n=>`<div class="note-entry">
     <div class="note-entry-loc">${n.floor}${n.room?' · '+n.room:''} — ${n.task}</div>
     <div class="note-entry-text">${n.note}</div>
+    ${n.noteTs ? `<span class="req-time">📝 ${n.noteTs}</span>` : ''}
   </div>`).join('');
   if (maxShow && notes.length > maxShow) h += `<div style="padding:8px 18px;font-size:12px;color:var(--text-muted)">${notes.length-maxShow} more note(s)…</div>`;
   return h;
