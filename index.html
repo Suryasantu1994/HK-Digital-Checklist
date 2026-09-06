@@ -1447,6 +1447,10 @@ async function preloadBuildingData(building, date) {
         Object.keys(notesMap).forEach(function(idx) {
           if (notesMap[idx]) localStorage.setItem(noteKey(building, fn, idx, date), notesMap[idx]);
         });
+        var noteTsMap = data.notets || {};
+        Object.keys(noteTsMap).forEach(function(idx) {
+          if (noteTsMap[idx]) localStorage.setItem(noteTsKey(building, fn, idx, date), noteTsMap[idx]);
+        });
         var freqMap = data.freq || {};
         Object.keys(freqMap).forEach(function(idx) {
           if (freqMap[idx] && freqMap[idx].length) {
@@ -1507,8 +1511,14 @@ function setChecked(building, floor, obj, date) {
 function noteKey(building, floor, idx, date) {
   return 'gitam_note_' + building + '_' + floor + '_' + idx + '_' + (date || viewingDate);
 }
+function noteTsKey(building, floor, idx, date) {
+  return 'gitam_notets_' + building + '_' + floor + '_' + idx + '_' + (date || viewingDate);
+}
 function getNote(building, floor, idx, date) {
   return localStorage.getItem(noteKey(building, floor, idx, date)) || '';
+}
+function getNoteTs(building, floor, idx, date) {
+  return localStorage.getItem(noteTsKey(building, floor, idx, date)) || '';
 }
 function setNote(building, floor, idx, val, date) {
   var lsKey = noteKey(building, floor, idx, date);
@@ -1516,6 +1526,10 @@ function setNote(building, floor, idx, val, date) {
   var docId = _fsId('cl', building, floor, d);
   var data = {};
   data['notes.' + idx] = val || '';
+  // Also save/clear note timestamp
+  var nowTs = val ? new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}) + ', ' + new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) : '';
+  data['notets.' + idx] = nowTs;
+  localStorage.setItem(noteTsKey(building, floor, idx, date || viewingDate), nowTs);
   _fsWrite('checklist', docId, data, lsKey, val || null);
 }
 
@@ -2590,7 +2604,7 @@ function showDashboard_render() {
 
     // Notes snippet for card
     const notesCardHtml = notes.length ? notes.slice(0,SHOW_N).map(n=>`
-      <div class="card-note-item"><span class="card-note-loc">${n.floor}${n.room?' · '+n.room:''}</span> — ${n.note}</div>`).join('')
+      <div class="card-note-item"><span class="card-note-loc">${n.floor}${n.room?' · '+n.room:''}</span> — ${n.note}${n.noteTs?`<span class="req-time">📝 ${n.noteTs}</span>`:''}</div>`).join('')
       + (notes.length>SHOW_N?`<div style="font-size:10px;color:var(--text-muted);margin-top:2px">+${notes.length-SHOW_N} more</div>`:'') : '';
 
     // Pending snippet for card — daily tasks
@@ -2706,11 +2720,11 @@ async function showBuilding(bk, floorName) {
   currentFloor = floorName || floorNames[0];
   // Render immediately so switching never hangs on Firebase
   renderBuildingView();
-  // Sync from Firestore in background (3s timeout), re-render if still on same building
+  // Sync from Firestore (3s timeout), always re-render after to show timestamps & notes
   try {
     await Promise.race([preloadBuildingData(bk, viewingDate), new Promise(r => setTimeout(r, 3000))]);
-    if (currentBuilding === bk && currentView === 'building') renderBuildingView();
   } catch(e) {}
+  if (currentBuilding === bk && currentView === 'building') renderBuildingView();
 }
 
 function renderBuildingView() {
@@ -3040,6 +3054,7 @@ function renderFloorItems() {
       ${freqRowHtml}
       <div class="note-row ${note?'open':''}" id="note-row-${origIdx}">
         <textarea ${!edit?'disabled':''} placeholder="Add a note..." onchange="saveNote(${origIdx},this.value)">${note}</textarea>
+        ${note && getNoteTs(bk, currentFloor, origIdx, viewingDate) ? `<span class="req-time">📝 Added: ${getNoteTs(bk, currentFloor, origIdx, viewingDate)}</span>` : ''}
       </div>`;
   }
   if(!filtered.length) itemsHtml = `<div class="no-items">No items${searchQuery?' matching "'+searchQuery+'"':''}</div>`;
@@ -4054,7 +4069,7 @@ function getBuildingNotes(bk, date) {
   for (const [fn, items] of Object.entries(b.floors)) {
     for (let i=0; i<items.length; i++) {
       const n = getNote(bk, fn, i, date);
-      if (n) notes.push({floor: fn, room: items[i].room||'', task: items[i].name, note: n});
+      if (n) notes.push({floor: fn, room: items[i].room||'', task: items[i].name, note: n, noteTs: getNoteTs(bk, fn, i, date)});
     }
   }
   return notes;
