@@ -1126,6 +1126,7 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
     </div>
     <div class="header-right">
       <div class="user-badge" id="userLabel"></div>
+      <button class="notif-btn" id="refreshBtn" onclick="refreshCurrentView()" title="Refresh data from server" style="font-size:15px;">🔄</button>
       <button class="notif-btn" id="notifBtn" onclick="toggleNotifPanel()" title="Low-rating alerts" style="display:none;">
         🔔<span class="notif-badge" id="notifBadge" style="display:none;">0</span>
       </button>
@@ -6120,6 +6121,25 @@ function clearFloorSig(role) {
   if (metaEl)    metaEl.textContent = '';
   if (placeholder) placeholder.style.display = '';
   showToast('🗑 Signature cleared');
+}
+
+// ── REFRESH ───────────────────────────────────────────────────────────────────
+async function refreshCurrentView() {
+  const btn = document.getElementById('refreshBtn');
+  if (btn) { btn.style.opacity = '0.4'; btn.style.pointerEvents = 'none'; }
+  try {
+    const bk = currentBuilding;
+    if (bk) {
+      await Promise.race([preloadBuildingData(bk, viewingDate), new Promise(r => setTimeout(r, 5000))]);
+    }
+    if (currentView === 'dashboard') showDashboard();
+    else if (currentView === 'building' && bk) renderBuildingView();
+    showToast('✅ Refreshed');
+  } catch(e) {
+    showToast('⚠️ Refresh failed');
+  } finally {
+    if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
+  }
 }
 
 // ── APP STARTUP ───────────────────────────────────────────────────────────────
