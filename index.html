@@ -1210,6 +1210,31 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
   </div>
 </div>
 
+<!-- PDF DATE RANGE EXPORT MODAL -->
+<div class="pwd-modal-overlay" id="pdfRangeModal">
+  <div class="pwd-modal">
+    <button class="pwd-modal-close" onclick="closePdfRangeModal()">✕</button>
+    <h3>📄 Save PDF</h3>
+    <p class="modal-sub">Choose a date range to include in the report. Leave both the same for a single day.</p>
+    <input type="hidden" id="pdfRangeBk">
+    <div style="display:flex;gap:12px;">
+      <div class="form-group" style="margin-bottom:14px;flex:1;">
+        <label>From Date</label>
+        <input type="date" id="pdfFromDate" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--text);transition:border-color .2s;background:var(--bg);">
+      </div>
+      <div class="form-group" style="margin-bottom:14px;flex:1;">
+        <label>To Date</label>
+        <input type="date" id="pdfToDate" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--text);transition:border-color .2s;background:var(--bg);">
+      </div>
+    </div>
+    <div class="login-error" id="pdfRangeError" style="display:none;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+      <button class="btn btn-s" onclick="closePdfRangeModal()">Cancel</button>
+      <button class="btn btn-p" onclick="confirmPdfRangeExport()">📄 Generate PDF</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── STAFF ASSIGNMENT MODAL ─────────────────────────────────────────────── -->
 <div class="staff-modal-overlay" id="staffModal">
   <div class="staff-modal" style="width:500px;max-width:96vw;">
@@ -1428,6 +1453,10 @@ async function preloadBuildingData(building, date) {
             localStorage.setItem(freqKey(building, fn, idx, date), JSON.stringify(freqMap[idx]));
           }
         });
+        var tsMap = data.ts || {};
+        Object.keys(tsMap).forEach(function(idx) {
+          if (tsMap[idx]) localStorage.setItem(tsKey(building, fn, idx, date), tsMap[idx]);
+        });
       }).catch(function(){});
     });
 
@@ -1488,6 +1517,26 @@ function setNote(building, floor, idx, val, date) {
   var data = {};
   data['notes.' + idx] = val || '';
   _fsWrite('checklist', docId, data, lsKey, val || null);
+}
+
+// ── COMPLETION TIMESTAMPS ────────────────────────────────────────────────────
+// Records the time-of-day a checklist item was ticked, so "Done" shows when.
+function tsKey(building, floor, idx, date) {
+  return 'gitam_ts_' + building + '_' + floor + '_' + idx + '_' + (date || viewingDate);
+}
+function getTs(building, floor, idx, date) {
+  return localStorage.getItem(tsKey(building, floor, idx, date)) || '';
+}
+function setTs(building, floor, idx, val, date) {
+  var lsKey = tsKey(building, floor, idx, date);
+  var d = date || viewingDate;
+  var docId = _fsId('cl', building, floor, d);
+  var data = {};
+  data['ts.' + idx] = val || '';
+  _fsWrite('checklist', docId, data, lsKey, val || null);
+}
+function nowTimeStr() {
+  return new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:true});
 }
 
 // ── REMARKS ────────────────────────────────────────────────────────────────
@@ -2779,7 +2828,7 @@ function renderBuildingView() {
       </div>
       <div class="cl-actions no-print">
         ${adminBtn}
-        <button class="btn btn-gold" onclick="saveTasksExport('${esc(bk)}')">📄 Save PDF</button>
+        <button class="btn btn-gold" onclick="openPdfRangeModal('${esc(bk)}')">📄 Save PDF</button>
         <button class="btn btn-s" onclick="printPage()">🖨 Print</button>
         <button class="btn btn-s" onclick="showQrSheet('${esc(bk)}')" style="border-color:#7C3AED;color:#7C3AED;">📲 QR Codes</button>
       </div>
@@ -2960,6 +3009,7 @@ function renderFloorItems() {
   for (let i=0; i<filtered.length; i++) {
     const origIdx = items.indexOf(filtered[i]);
     const isChk = !!checked[origIdx];
+    const doneTs = isChk ? getTs(bk, currentFloor, origIdx, viewingDate) : '';
     const note = getNote(bk, currentFloor, origIdx, viewingDate);
     const isWR = isWashroom(filtered[i].name);
     const freq = isWR ? getFreq(bk, currentFloor, origIdx, viewingDate) : [];
@@ -2982,6 +3032,7 @@ function renderFloorItems() {
         </div>
         <div class="item-actions">
           <span class="istatus ${isChk?'done':'pend'}">${isChk?'Done':'Pending'}</span>
+          ${isChk && doneTs ? `<span class="istatus-ts" style="font-size:10px;color:var(--text-muted);white-space:nowrap;">at ${doneTs}</span>` : ''}
           ${freqBtnHtml}
           <button class="note-btn ${note?'hasnote':''} no-print" onclick="toggleNote(${origIdx})">${note?'📝':'+ Note'}</button>
         </div>
@@ -3288,6 +3339,7 @@ function renderExtraSchedule() {
       const count      = itemCounts[i];
       const pct        = expElapsed > 0 ? Math.min(100, Math.round(count / expElapsed * 100)) : 0;
       const isChkToday = isCurrentMonth && !!todayChecked[i];
+      const todayTs    = isChkToday ? getTs(bk, '_extra_' + cat.key, i, viewingDate) : '';
       const barColor   = pct >= 100 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
       const statusIcon = pct >= 100 ? '✅' : pct > 0 ? '⚠️' : '❌';
 
@@ -3303,7 +3355,7 @@ function renderExtraSchedule() {
           ${isCurrentMonth
             ? `<div class="chkbox ${isChkToday?'chk':''} ${!edit?'disabled':''}" onclick="${edit?`toggleExtra('${cat.key}',${i})`:''}"></div>`
             : `<span style="font-size:15px;width:22px;min-width:22px;text-align:center;">${statusIcon}</span>`}
-          <div style="flex:1;font-size:13px;font-weight:500;color:var(--text);">${items[i]}</div>
+          <div style="flex:1;font-size:13px;font-weight:500;color:var(--text);">${items[i]}${todayTs?` <span style="font-size:10px;font-weight:400;color:var(--text-muted);">(at ${todayTs})</span>`:''}</div>
           <div style="font-size:12px;font-weight:700;color:${barColor};white-space:nowrap;">${countLabel}</div>
           <div style="font-size:11px;font-weight:700;color:${barColor};min-width:36px;text-align:right;">${pct}%</div>
         </div>
@@ -3367,9 +3419,11 @@ function renderOuterAreas() {
   let itHtml = '';
   for (let i = 0; i < items.length; i++) {
     const isChk = !!checked[i];
+    const doneTs = isChk ? getTs(bk, '_extra_outer_areas', i, viewingDate) : '';
     itHtml += `<div class="extra-item">
       <div class="chkbox ${isChk?'chk':''} ${!edit?'disabled':''}" onclick="${edit?`toggleOuter(${i})`:''}"></div>
-      <div class="iname ${isChk?'chk':''}" style="font-size:13px">${items[i]}</div>
+      <div class="iname ${isChk?'chk':''}" style="font-size:13px;flex:1;">${items[i]}</div>
+      ${isChk && doneTs ? `<span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">at ${doneTs}</span>` : ''}
     </div>`;
   }
   document.getElementById('floorContent').innerHTML = `<div class="extra-grid"><div class="extra-card" style="border-top:4px solid #2E7D32;max-width:600px;">
@@ -3384,10 +3438,12 @@ function toggleItem(idx) {
   const checked = getChecked(currentBuilding, currentFloor, viewingDate);
   checked[idx] = !checked[idx];
   setChecked(currentBuilding, currentFloor, checked, viewingDate);
+  const ts = checked[idx] ? nowTimeStr() : '';
+  setTs(currentBuilding, currentFloor, idx, ts, viewingDate);
   renderFloorContent();
   updateSummaryBar();
   refreshInfoPanels();
-  showToast(checked[idx]?'✅ Done':'↩ Pending');
+  showToast(checked[idx]?('✅ Done at '+ts):'↩ Pending');
 }
 function toggleExtra(cat, idx) {
   if(!canEdit()){showToast('🔒 Editing disabled for this date');return;}
@@ -3395,6 +3451,7 @@ function toggleExtra(cat, idx) {
   const checked = getChecked(currentBuilding, key, viewingDate);
   checked[idx] = !checked[idx];
   setChecked(currentBuilding, key, checked, viewingDate);
+  setTs(currentBuilding, key, idx, checked[idx] ? nowTimeStr() : '', viewingDate);
   renderExtraSchedule();
   updateSummaryBar();
   refreshInfoPanels();
@@ -3404,6 +3461,7 @@ function toggleOuter(idx) {
   const checked = getChecked(currentBuilding, '_extra_outer_areas', viewingDate);
   checked[idx] = !checked[idx];
   setChecked(currentBuilding, '_extra_outer_areas', checked, viewingDate);
+  setTs(currentBuilding, '_extra_outer_areas', idx, checked[idx] ? nowTimeStr() : '', viewingDate);
   renderOuterAreas();
   updateSummaryBar();
   refreshInfoPanels();
@@ -3463,7 +3521,8 @@ function markAllFloor() {
   const BUILDINGS = getBuildings();
   const items = BUILDINGS[currentBuilding].floors[currentFloor]||[];
   const checked = {};
-  items.forEach((_,i)=>checked[i]=true);
+  const ts = nowTimeStr();
+  items.forEach((_,i)=>{checked[i]=true; setTs(currentBuilding, currentFloor, i, ts, viewingDate);});
   setChecked(currentBuilding, currentFloor, checked, viewingDate);
   renderFloorContent();
   updateSummaryBar();
@@ -3473,14 +3532,20 @@ function markAllFloor() {
 function resetFloor() {
   if(!canEdit()){showToast('🔒 Editing disabled for this date');return;}
   if(!confirm('Reset all checkboxes for this floor?')) return;
+  const BUILDINGS_RESET = getBuildings();
   if(currentFloor==='_extra'){
-    ['weekly','fifteen_days','monthly'].forEach(cat=>setChecked(currentBuilding,'_extra_'+cat,{},viewingDate));
+    ['weekly','fifteen_days','monthly'].forEach(cat=>{
+      setChecked(currentBuilding,'_extra_'+cat,{},viewingDate);
+      (BUILDINGS_RESET[currentBuilding].extra[cat]||[]).forEach((_,i)=>setTs(currentBuilding,'_extra_'+cat,i,'',viewingDate));
+    });
     renderExtraSchedule();
   } else if(currentFloor==='_outer'){
     setChecked(currentBuilding,'_extra_outer_areas',{},viewingDate);
+    ((BUILDINGS_RESET[currentBuilding].extra&&BUILDINGS_RESET[currentBuilding].extra.outer_areas)||[]).forEach((_,i)=>setTs(currentBuilding,'_extra_outer_areas',i,'',viewingDate));
     renderOuterAreas();
   } else {
     setChecked(currentBuilding, currentFloor, {}, viewingDate);
+    (BUILDINGS_RESET[currentBuilding].floors[currentFloor]||[]).forEach((_,i)=>setTs(currentBuilding,currentFloor,i,'',viewingDate));
     renderFloorContent();
   }
   updateSummaryBar();
@@ -3623,13 +3688,129 @@ function saveAdminTasks() {
 // ── PRINT / SAVE ──────────────────────────────────────────────────────────────
 function printPage() { window.print(); }
 
-function saveTasksExport(bk) {
+// ── PDF DATE RANGE MODAL ──────────────────────────────────────────────────────
+function openPdfRangeModal(bk) {
+  document.getElementById('pdfRangeBk').value = bk;
+  document.getElementById('pdfFromDate').value = viewingDate;
+  document.getElementById('pdfToDate').value = viewingDate;
+  const err = document.getElementById('pdfRangeError');
+  err.style.display = 'none';
+  err.textContent = '';
+  document.getElementById('pdfRangeModal').classList.add('open');
+}
+function closePdfRangeModal() {
+  document.getElementById('pdfRangeModal').classList.remove('open');
+}
+function confirmPdfRangeExport() {
+  const bk   = document.getElementById('pdfRangeBk').value;
+  const from = document.getElementById('pdfFromDate').value;
+  const to   = document.getElementById('pdfToDate').value;
+  const err  = document.getElementById('pdfRangeError');
+  if (!from || !to) {
+    err.textContent = 'Please select both a From Date and a To Date.';
+    err.style.display = 'block';
+    return;
+  }
+  if (from > to) {
+    err.textContent = '"From Date" must be on or before "To Date".';
+    err.style.display = 'block';
+    return;
+  }
+  const dayCount = Math.round((new Date(to+'T00:00:00') - new Date(from+'T00:00:00')) / 86400000) + 1;
+  if (dayCount > 62) {
+    err.textContent = 'Please choose a range of 62 days or fewer.';
+    err.style.display = 'block';
+    return;
+  }
+  err.style.display = 'none';
+  closePdfRangeModal();
+  saveTasksExport(bk, from, to);
+}
+
+// Build an array of 'YYYY-MM-DD' keys from `from` to `to`, inclusive.
+function _dateRangeKeys(from, to) {
+  const [fy, fm, fd] = from.split('-').map(Number);
+  const [ty, tm, td] = to.split('-').map(Number);
+  const cur = new Date(fy, fm - 1, fd);
+  const end = new Date(ty, tm - 1, td);
+  const out = [];
+  while (cur <= end) {
+    out.push(cur.getFullYear() + '-' + String(cur.getMonth() + 1).padStart(2, '0') + '-' + String(cur.getDate()).padStart(2, '0'));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return out;
+}
+
+function saveTasksExport(bk, fromDate, toDate) {
+  const from = fromDate || viewingDate;
+  const to   = toDate   || viewingDate;
+  const dates = _dateRangeKeys(from, to);
+
   // Load jsPDF + AutoTable from CDN on demand, then generate PDF
-  function doGenerate() {
+  async function doGenerate() {
     const { jsPDF } = window.jspdf;
+
+    // Make sure every date in the range has its Firestore data pulled into
+    // localStorage before we start reading rows (viewingDate is preloaded
+    // automatically elsewhere, but other dates in the range may not be).
+    if (_getDb()) {
+      try {
+        await Promise.race([
+          Promise.all(dates.map(d => preloadBuildingData(bk, d))),
+          new Promise(r => setTimeout(r, 8000))
+        ]);
+      } catch (e) {}
+    }
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const PW = doc.internal.pageSize.getWidth();   // 210
+    const PH = doc.internal.pageSize.getHeight();  // 297
+
+    dates.forEach((date, i) => {
+      if (i > 0) doc.addPage();
+      _drawTasksPdfPage(doc, bk, date, PW, PH);
+    });
+
+    // ── Footer on every page ───────────────────────────────────────────────────
+    const TEAL  = [0, 79, 79];
+    const WHITE = [255, 255, 255];
+    const pageCount = doc.getNumberOfPages();
+    for (let pg = 1; pg <= pageCount; pg++) {
+      doc.setPage(pg);
+      doc.setFillColor(...TEAL);
+      doc.rect(0, PH - 10, PW, 10, 'F');
+      doc.setTextColor(...WHITE);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.text('GITAM University — Directorate of Hospitality', 10, PH - 4);
+      doc.text('Page ' + pg + ' of ' + pageCount, PW - 10, PH - 4, { align: 'right' });
+    }
+
+    const fname = (from === to)
+      ? `${bk.replace(/\s+/g,'_')}_Tasks_${from}.pdf`
+      : `${bk.replace(/\s+/g,'_')}_Tasks_${from}_to_${to}.pdf`;
+    doc.save(fname);
+    showToast('📄 PDF saved!');
+  }
+
+  // Load scripts if not already present
+  if (window.jspdf && window.jspdf.jsPDF) { doGenerate(); return; }
+  showToast('⏳ Preparing PDF…');
+  const s1 = document.createElement('script');
+  s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  s1.onload = () => {
+    const s2 = document.createElement('script');
+    s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js';
+    s2.onload = doGenerate;
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s1);
+}
+
+// Draws one full date's checklist report onto the current page of `doc`.
+function _drawTasksPdfPage(doc, bk, date, PW, PH) {
     const BUILDINGS = getBuildings();
     const b = BUILDINGS[bk];
-    const date = viewingDate;
 
     // ── Collect main rows ──────────────────────────────────────────────────────
     let rows = [];
@@ -3668,10 +3849,6 @@ function saveTasksExport(bk) {
     const LIGHT_BG  = [244, 248, 248];
     const BORDER    = [200, 224, 224];
 
-    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-    const PW = doc.internal.pageSize.getWidth();   // 210
-    const PH = doc.internal.pageSize.getHeight();  // 297
-
     // ── Header banner ──────────────────────────────────────────────────────────
     doc.setFillColor(...TEAL);
     doc.rect(0, 0, PW, 22, 'F');
@@ -3701,7 +3878,7 @@ function saveTasksExport(bk) {
     doc.setFont('helvetica','normal');
     doc.setFontSize(9);
     doc.setTextColor(90,112,112);
-    doc.text('Date: ' + date, 16, y+14);
+    doc.text('Date: ' + formatDate(date), 16, y+14);
     doc.text('Printed: ' + new Date().toLocaleString('en-IN'), 100, y+14);
 
     // ── Summary boxes ─────────────────────────────────────────────────────────
@@ -3866,36 +4043,6 @@ function saveTasksExport(bk) {
         tableLineWidth: 0.2,
       });
     }
-
-    // ── Footer on every page ───────────────────────────────────────────────────
-    const pageCount = doc.getNumberOfPages();
-    for (let pg=1; pg<=pageCount; pg++) {
-      doc.setPage(pg);
-      doc.setFillColor(...TEAL);
-      doc.rect(0, PH-10, PW, 10, 'F');
-      doc.setTextColor(...WHITE);
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(7);
-      doc.text('GITAM University — Directorate of Hospitality', 10, PH-4);
-      doc.text('Page ' + pg + ' of ' + pageCount, PW-10, PH-4, {align:'right'});
-    }
-
-    doc.save(`${bk.replace(/\s+/g,'_')}_Tasks_${date}.pdf`);
-    showToast('📄 PDF saved!');
-  }
-
-  // Load scripts if not already present
-  if (window.jspdf && window.jspdf.jsPDF) { doGenerate(); return; }
-  showToast('⏳ Preparing PDF…');
-  const s1 = document.createElement('script');
-  s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-  s1.onload = () => {
-    const s2 = document.createElement('script');
-    s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js';
-    s2.onload = doGenerate;
-    document.head.appendChild(s2);
-  };
-  document.head.appendChild(s1);
 }
 
 
