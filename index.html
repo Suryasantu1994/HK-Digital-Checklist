@@ -1353,6 +1353,10 @@ let adminTempFloor = null;
 // ── REALTIME LISTENERS ────────────────────────────────────────────────────────
 // Holds active onSnapshot unsubscribe functions keyed by Firestore doc ID
 let _realtimeUnsubs = {};
+// In-memory cache for completion timestamps — keyed same as tsKey()
+// Populated by Firestore snapshots so admin sees timestamps immediately
+// without waiting for localStorage to be cold-warmed.
+const _tsCache = {};
 
 function _stopAllRealtimeListeners() {
   Object.values(_realtimeUnsubs).forEach(fn => { try { fn(); } catch(e) {} });
@@ -1378,8 +1382,14 @@ function _applyDocSnapshot(building, fn, data) {
   // task completion timestamps
   const tsMap = data.ts || {};
   Object.keys(tsMap).forEach(idx => {
-    if (tsMap[idx]) localStorage.setItem(tsKey(building, fn, idx, date), tsMap[idx]);
-    else localStorage.removeItem(tsKey(building, fn, idx, date));
+    const k = tsKey(building, fn, idx, date);
+    if (tsMap[idx]) {
+      localStorage.setItem(k, tsMap[idx]);
+      _tsCache[k] = tsMap[idx];       // ← also populate in-memory cache
+    } else {
+      localStorage.removeItem(k);
+      delete _tsCache[k];
+    }
   });
   // freq logs
   const freqMap = data.freq || {};
@@ -1525,7 +1535,11 @@ async function preloadBuildingData(building, date) {
         });
         var tsMap = data.ts || {};
         Object.keys(tsMap).forEach(function(idx) {
-          if (tsMap[idx]) localStorage.setItem(tsKey(building, fn, idx, date), tsMap[idx]);
+          if (tsMap[idx]) {
+            var k = tsKey(building, fn, idx, date);
+            localStorage.setItem(k, tsMap[idx]);
+            _tsCache[k] = tsMap[idx]; // ← populate in-memory cache
+          }
         });
       }).catch(function(){});
     });
@@ -1605,7 +1619,8 @@ function tsKey(building, floor, idx, date) {
   return 'gitam_ts_' + building + '_' + floor + '_' + idx + '_' + (date || viewingDate);
 }
 function getTs(building, floor, idx, date) {
-  return localStorage.getItem(tsKey(building, floor, idx, date)) || '';
+  const k = tsKey(building, floor, idx, date);
+  return _tsCache[k] || localStorage.getItem(k) || '';
 }
 function setTs(building, floor, idx, val, date) {
   var lsKey = tsKey(building, floor, idx, date);
@@ -1613,6 +1628,7 @@ function setTs(building, floor, idx, val, date) {
   var docId = _fsId('cl', building, floor, d);
   var data = {};
   data['ts.' + idx] = val || '';
+  if (val) _tsCache[lsKey] = val; else delete _tsCache[lsKey]; // keep cache in sync
   _fsWrite('checklist', docId, data, lsKey, val || null);
 }
 function nowTimeStr() {
