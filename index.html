@@ -1632,7 +1632,20 @@ function setTs(building, floor, idx, val, date) {
   _fsWrite('checklist', docId, data, lsKey, val || null);
 }
 function nowTimeStr() {
-  return new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:true});
+  return new Date().toISOString(); // Store as ISO for reliable cross-device display
+}
+function formatTs(ts) {
+  if (!ts) return '';
+  // Handle both ISO strings and legacy locale strings (e.g. "11:15 am")
+  if (ts.includes('T') && ts.includes('Z')) {
+    try {
+      const d = new Date(ts);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:true});
+      }
+    } catch(e) {}
+  }
+  return ts; // Legacy locale string — display as-is
 }
 
 // ── REMARKS ────────────────────────────────────────────────────────────────
@@ -3141,7 +3154,7 @@ function renderFloorItems() {
           ${freqBtnHtml}
           <button class="note-btn ${note?'hasnote':''} no-print" onclick="toggleNote(${origIdx})">${note?'📝':'+ Note'}</button>
         </div>
-        ${doneTs ? `<div class="req-time" style="text-align:right;padding-right:2px;">✅ ${doneTs}</div>` : ''}
+        ${doneTs ? `<div class="req-time" style="text-align:right;padding-right:2px;">✅ ${formatTs(doneTs)}</div>` : ''}
       </div>
       ${freqRowHtml}
       <div class="note-row ${note?'open':''}" id="note-row-${origIdx}">
@@ -3469,7 +3482,7 @@ function renderExtraSchedule() {
         <div style="background:var(--teal-pale);border-radius:100px;height:5px;overflow:hidden;margin-left:32px;">
           <div style="height:100%;border-radius:100px;background:${barColor};width:${pct}%;transition:width .5s;"></div>
         </div>
-        ${todayTs ? `<div class="req-time" style="margin-left:32px;">✅ Today: ${todayTs}</div>` : ''}
+        ${todayTs ? `<div class="req-time" style="margin-left:32px;">✅ Today: ${formatTs(todayTs)}</div>` : ''}
       </div>`;
     }
 
@@ -3531,7 +3544,7 @@ function renderOuterAreas() {
     itHtml += `<div class="extra-item">
       <div class="chkbox ${isChk?'chk':''} ${!edit?'disabled':''}" onclick="${edit?`toggleOuter(${i})`:''}"></div>
       <div class="iname ${isChk?'chk':''}" style="font-size:13px;flex:1;">${items[i]}</div>
-      ${doneTs ? `<span class="req-time">✅ ${doneTs}</span>` : ''}
+      ${doneTs ? `<span class="req-time">✅ ${formatTs(doneTs)}</span>` : ''}
     </div>`;
   }
   document.getElementById('floorContent').innerHTML = `<div class="extra-grid"><div class="extra-card" style="border-top:4px solid #2E7D32;max-width:600px;">
@@ -3551,7 +3564,7 @@ function toggleItem(idx) {
   renderFloorContent();
   updateSummaryBar();
   refreshInfoPanels();
-  showToast(checked[idx]?('✅ Done at '+ts):'↩ Pending');
+  showToast(checked[idx]?('✅ Done at '+formatTs(ts)):'↩ Pending');
 }
 function toggleExtra(cat, idx) {
   if(!canEdit()){showToast('🔒 Editing disabled for this date');return;}
@@ -6147,19 +6160,46 @@ function _initOneSig(role) {
   canvas.addEventListener('touchmove',  move,  { passive: false });
   canvas.addEventListener('touchend',   end,   { passive: false });
 
-  // Load saved
+  // ── Load signature: localStorage first (fast), then sync from Firestore ───
   var key = _sigKey(currentBuilding, currentFloor, viewingDate, role);
-  var saved = localStorage.getItem(key);
-  if (saved) {
+
+  function _applySig(dataUrl, sigData) {
+    if (!dataUrl) return;
+    // Cache to localStorage for offline/fast access
+    localStorage.setItem(key, dataUrl);
+    if (sigData) localStorage.setItem(key+'_meta', JSON.stringify(sigData));
     var img = new Image();
-    img.onload = function() { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); if(placeholder) placeholder.style.display='none'; };
-    img.src = saved;
-    var meta = document.getElementById(ids.metaId);
+    img.onload = function() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      if (placeholder) placeholder.style.display = 'none';
+    };
+    img.src = dataUrl;
+    var metaEl    = document.getElementById(ids.metaId);
     var indicator = document.getElementById(ids.indId);
-    var sigData = null;
-    try { sigData = JSON.parse(localStorage.getItem(key+'_meta')); } catch(e) {}
-    if (meta && sigData) meta.textContent = 'Signed by '+(sigData.user||'—')+' on '+(sigData.ts||'');
+    if (metaEl && sigData) metaEl.textContent = 'Signed by '+(sigData.user||'—')+' on '+(sigData.ts||'');
     if (indicator) indicator.classList.add('visible');
+  }
+
+  // 1. Try localStorage immediately (works for the signing device offline)
+  var savedLocal = localStorage.getItem(key);
+  if (savedLocal) {
+    var sigDataLocal = null;
+    try { sigDataLocal = JSON.parse(localStorage.getItem(key+'_meta')); } catch(e) {}
+    _applySig(savedLocal, sigDataLocal);
+  }
+
+  // 2. Always fetch from Firestore to get the latest (cross-device sync)
+  var db = _getDb();
+  if (db) {
+    var fsDocId = _fsId('sig', currentBuilding, currentFloor, viewingDate);
+    db.collection('signatures').doc(fsDocId).get().then(function(snap) {
+      if (!snap.exists) return;
+      var data = snap.data();
+      var fsDataUrl = data[role + '_dataUrl'];
+      var fsMeta    = data[role + '_meta'];
+      if (fsDataUrl) _applySig(fsDataUrl, fsMeta || null);
+    }).catch(function(e) { console.warn('Signature Firestore read failed:', e); });
   }
 }
 
@@ -6190,6 +6230,20 @@ function saveFloorSig(role) {
   var meta = { user: currentUser ? currentUser.label : '', ts: ts };
   localStorage.setItem(key+'_meta', JSON.stringify(meta));
 
+  // ── Sync to Firestore so admin portal sees the signature ──────────────────
+  var db = _getDb();
+  if (db) {
+    var fsDocId = _fsId('sig', currentBuilding, currentFloor, viewingDate);
+    var fsData = {};
+    fsData[role + '_dataUrl'] = dataUrl;
+    fsData[role + '_meta']    = meta;
+    fsData['building'] = currentBuilding;
+    fsData['floor']    = currentFloor;
+    fsData['date']     = viewingDate;
+    db.collection('signatures').doc(fsDocId).set(fsData, { merge: true })
+      .catch(function(e) { console.warn('Signature Firestore write failed:', e); });
+  }
+
   var label = role === 'bm' ? 'Building Manager' : 'Floor Supervisor';
   var indicator = document.getElementById(ids.indId);
   var metaEl    = document.getElementById(ids.metaId);
@@ -6207,6 +6261,18 @@ function clearFloorSig(role) {
   var key = _sigKey(currentBuilding, currentFloor, viewingDate, role);
   localStorage.removeItem(key);
   localStorage.removeItem(key+'_meta');
+
+  // ── Clear from Firestore too ──────────────────────────────────────────────
+  var db = _getDb();
+  if (db) {
+    var fsDocId = _fsId('sig', currentBuilding, currentFloor, viewingDate);
+    var fsData = {};
+    fsData[role + '_dataUrl'] = firebase.firestore.FieldValue.delete();
+    fsData[role + '_meta']    = firebase.firestore.FieldValue.delete();
+    db.collection('signatures').doc(fsDocId).update(fsData)
+      .catch(function(e) { /* doc may not exist yet — ignore */ });
+  }
+
   var indicator = document.getElementById(ids.indId);
   var metaEl    = document.getElementById(ids.metaId);
   var placeholder = document.getElementById(ids.phId);
