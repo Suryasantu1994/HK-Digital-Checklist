@@ -3137,10 +3137,11 @@ function renderFloorItems() {
         </div>
         <div class="item-actions">
           <span class="istatus ${isChk?'done':'pend'}">${isChk?'Done':'Pending'}</span>
-          ${isChk && doneTs ? `<span class="istatus-ts" style="font-size:10px;color:var(--text-muted);white-space:nowrap;">at ${doneTs}</span>` : ''}
+
           ${freqBtnHtml}
           <button class="note-btn ${note?'hasnote':''} no-print" onclick="toggleNote(${origIdx})">${note?'📝':'+ Note'}</button>
         </div>
+        ${doneTs ? `<div class="req-time" style="text-align:right;padding-right:2px;">✅ ${doneTs}</div>` : ''}
       </div>
       ${freqRowHtml}
       <div class="note-row ${note?'open':''}" id="note-row-${origIdx}">
@@ -3461,13 +3462,14 @@ function renderExtraSchedule() {
           ${isCurrentMonth
             ? `<div class="chkbox ${isChkToday?'chk':''} ${!edit?'disabled':''}" onclick="${edit?`toggleExtra('${cat.key}',${i})`:''}"></div>`
             : `<span style="font-size:15px;width:22px;min-width:22px;text-align:center;">${statusIcon}</span>`}
-          <div style="flex:1;font-size:13px;font-weight:500;color:var(--text);">${items[i]}${todayTs?` <span style="font-size:10px;font-weight:400;color:var(--text-muted);">(at ${todayTs})</span>`:''}</div>
+          <div style="flex:1;font-size:13px;font-weight:500;color:var(--text);">${items[i]}</div>
           <div style="font-size:12px;font-weight:700;color:${barColor};white-space:nowrap;">${countLabel}</div>
           <div style="font-size:11px;font-weight:700;color:${barColor};min-width:36px;text-align:right;">${pct}%</div>
         </div>
         <div style="background:var(--teal-pale);border-radius:100px;height:5px;overflow:hidden;margin-left:32px;">
           <div style="height:100%;border-radius:100px;background:${barColor};width:${pct}%;transition:width .5s;"></div>
         </div>
+        ${todayTs ? `<div class="req-time" style="margin-left:32px;">✅ Today: ${todayTs}</div>` : ''}
       </div>`;
     }
 
@@ -3529,7 +3531,7 @@ function renderOuterAreas() {
     itHtml += `<div class="extra-item">
       <div class="chkbox ${isChk?'chk':''} ${!edit?'disabled':''}" onclick="${edit?`toggleOuter(${i})`:''}"></div>
       <div class="iname ${isChk?'chk':''}" style="font-size:13px;flex:1;">${items[i]}</div>
-      ${isChk && doneTs ? `<span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">at ${doneTs}</span>` : ''}
+      ${doneTs ? `<span class="req-time">✅ ${doneTs}</span>` : ''}
     </div>`;
   }
   document.getElementById('floorContent').innerHTML = `<div class="extra-grid"><div class="extra-card" style="border-top:4px solid #2E7D32;max-width:600px;">
