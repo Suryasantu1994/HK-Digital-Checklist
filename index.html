@@ -266,7 +266,8 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .cl-search input{padding:8px 14px;border:2px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);width:300px;max-width:100%;}
 .cl-search input:focus{outline:none;border-color:var(--teal);}
 .cl-items{padding:4px 0;}
-.cl-item{display:flex;align-items:flex-start;padding:10px 20px;border-bottom:1px solid var(--bg);transition:background .15s;gap:12px;}
+.cl-item{display:flex;flex-wrap:wrap;align-items:flex-start;padding:10px 20px;border-bottom:1px solid var(--bg);transition:background .15s;gap:12px;}
+.cl-item .req-time{flex-basis:100%;}
 .cl-item:hover{background:var(--bg);}
 .cl-item:last-child{border-bottom:none;}
 .chkbox{width:22px;height:22px;min-width:22px;border-radius:6px;border:2px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .2s;background:var(--white);user-select:none;}
@@ -318,7 +319,8 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .badge-monthly{background:#FFF0E8;color:#E67E22;}
 .badge-outer{background:#FFF8E8;color:#D4A843;}
 .extra-items{padding:8px 0;}
-.extra-item{display:flex;align-items:center;padding:9px 20px;gap:10px;border-bottom:1px solid var(--bg);}
+.extra-item{display:flex;flex-wrap:wrap;align-items:center;padding:9px 20px;gap:10px;border-bottom:1px solid var(--bg);}
+.extra-item .req-time{flex-basis:100%;}
 .extra-item:last-child{border-bottom:none;}
 .extra-item:hover{background:var(--bg);}
 
