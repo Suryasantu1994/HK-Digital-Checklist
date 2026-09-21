@@ -1359,10 +1359,47 @@ let _realtimeUnsubs = {};
 // Populated by Firestore snapshots so everyone sees timestamps immediately
 // without waiting for localStorage to be cold-warmed.
 const _tsCache = {};
+// Item indices whose note panel the current user has manually opened.
+// Survives live re-renders triggered by other users' edits arriving via
+// Firestore, so an in-progress note doesn't get slammed shut mid-typing.
+const _openNoteRows = new Set();
 
 function _stopAllRealtimeListeners() {
   Object.values(_realtimeUnsubs).forEach(fn => { try { fn(); } catch(e) {} });
   _realtimeUnsubs = {};
+}
+
+// ── PRESERVE IN-PROGRESS NOTE EDITS ACROSS LIVE RE-RENDERS ─────────────────────
+// Real-time updates (another user ticking a box, adding a note, etc.) trigger a
+// re-render of the building/floor view. Without this, if you're mid-way through
+// typing a note when someone else's change lands, your open note panel and
+// unsaved keystrokes get wiped out. Capture before any destructive re-render,
+// restore after.
+function _captureNoteFocus() {
+  const active = document.activeElement;
+  if (active && active.tagName === 'TEXTAREA') {
+    const row = active.closest('.note-row');
+    if (row && row.id && row.id.indexOf('note-row-') === 0) {
+      return {
+        idx: row.id.slice('note-row-'.length),
+        val: active.value,
+        selStart: active.selectionStart,
+        selEnd: active.selectionEnd
+      };
+    }
+  }
+  return null;
+}
+function _restoreNoteFocus(captured) {
+  if (!captured) return;
+  const row = document.getElementById('note-row-' + captured.idx);
+  const ta = row ? row.querySelector('textarea') : null;
+  if (ta) {
+    ta.value = captured.val;
+    row.classList.add('open');
+    ta.focus();
+    try { ta.setSelectionRange(captured.selStart, captured.selEnd); } catch(e) {}
+  }
 }
 
 function _applyDocSnapshot(building, fn, data) {
@@ -2820,6 +2857,7 @@ async function showBuilding(bk, floorName) {
   const BUILDINGS = getBuildings();
   const floorNames = Object.keys(BUILDINGS[bk].floors);
   currentFloor = floorName || floorNames[0];
+  _openNoteRows.clear();
   // Render immediately so switching never hangs on Firebase
   renderBuildingView();
   // One-time preload then start realtime listeners (admin only)
@@ -2835,6 +2873,11 @@ async function showBuilding(bk, floorName) {
 }
 
 function renderBuildingView() {
+  // This function fully replaces #mainContent below, which would otherwise
+  // discard an in-progress note edit (and its focus/cursor) whenever a live
+  // update arrives from Firestore. Capture now, restore once the rebuild
+  // (including the note textareas) is back in the DOM.
+  const _noteFocus = _captureNoteFocus();
   const bk = currentBuilding;
   const BUILDINGS = getBuildings();
   const b = BUILDINGS[bk];
@@ -2978,6 +3021,7 @@ function renderBuildingView() {
 
   renderFloorContent();
   refreshInfoPanels();
+  _restoreNoteFocus(_noteFocus);
 }
 
 function refreshInfoPanels() {
@@ -3020,6 +3064,7 @@ function refreshInfoPanels() {
 function switchFloor(fn) {
   currentFloor = fn;
   searchQuery = '';
+  _openNoteRows.clear(); // item indices are per-floor — don't carry "open" state across floors
   document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
   event.currentTarget.classList.add('active');
   renderFloorContent();
@@ -3122,6 +3167,11 @@ function renderFloorItems() {
   const items = b.floors[currentFloor] || [];
   const checked = getChecked(bk, currentFloor, viewingDate);
 
+  // Preserve an in-progress note edit if this function is doing the destructive
+  // re-render itself (e.g. called directly from a search/freq-log action rather
+  // than via renderBuildingView, which captures/restores around itself instead).
+  const _noteFocus = _captureNoteFocus();
+
   const filtered = searchQuery
     ? items.filter(it => it.name.toLowerCase().includes(searchQuery.toLowerCase()) || (it.room&&it.room.toLowerCase().includes(searchQuery.toLowerCase())))
     : items;
@@ -3160,7 +3210,7 @@ function renderFloorItems() {
         ${doneTs ? `<div class="req-time" style="text-align:right;padding-right:2px;">✅ ${formatTs(doneTs)}</div>` : ''}
       </div>
       ${freqRowHtml}
-      <div class="note-row ${note?'open':''}" id="note-row-${origIdx}">
+      <div class="note-row ${(note || _openNoteRows.has(origIdx))?'open':''}" id="note-row-${origIdx}">
         <textarea ${!edit?'disabled':''} placeholder="Add a note..." onchange="saveNote(${origIdx},this.value)">${note}</textarea>
         ${note && getNoteTs(bk, currentFloor, origIdx, viewingDate) ? `<span class="req-time">📝 Added: ${getNoteTs(bk, currentFloor, origIdx, viewingDate)}</span>` : ''}
       </div>`;
@@ -3169,6 +3219,8 @@ function renderFloorItems() {
 
   const list = document.getElementById('clItemsList');
   if (list) list.innerHTML = itemsHtml;
+
+  _restoreNoteFocus(_noteFocus);
 }
 
 // ── BUILDING-WISE STAFF NAMES ─────────────────────────────────────────────────
@@ -3592,7 +3644,11 @@ function toggleOuter(idx) {
 }
 function toggleNote(idx) {
   const row = document.getElementById('note-row-'+idx);
-  if(row) row.classList.toggle('open');
+  if(!row) return;
+  const nowOpen = row.classList.toggle('open');
+  // Remember open/closed state so a live re-render (from another user's
+  // edit landing via Firestore) doesn't silently snap this panel shut.
+  if (nowOpen) _openNoteRows.add(idx); else _openNoteRows.delete(idx);
 }
 function toggleFreq(idx) {
   const row = document.getElementById('freq-row-'+idx);
