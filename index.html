@@ -1354,7 +1354,7 @@ let adminTempFloor = null;
 // Holds active onSnapshot unsubscribe functions keyed by Firestore doc ID
 let _realtimeUnsubs = {};
 // In-memory cache for completion timestamps — keyed same as tsKey()
-// Populated by Firestore snapshots so admin sees timestamps immediately
+// Populated by Firestore snapshots so everyone sees timestamps immediately
 // without waiting for localStorage to be cold-warmed.
 const _tsCache = {};
 
@@ -2494,8 +2494,8 @@ function changeDate(val, context) {
   supLoadData(asDate);
   if(currentView === 'dashboard') showDashboard();
   else if(currentView === 'building') {
-    // Restart listeners for the new date
-    if (currentUser && currentUser.role === 'admin') startRealtimeListeners(currentBuilding, val);
+    // Restart listeners for the new date (all users, so timestamps sync live for everyone)
+    if (currentUser) startRealtimeListeners(currentBuilding, val);
     renderBuildingView();
   }
 }
@@ -2825,8 +2825,9 @@ async function showBuilding(bk, floorName) {
     await Promise.race([preloadBuildingData(bk, viewingDate), new Promise(r => setTimeout(r, 3000))]);
   } catch(e) {}
   if (currentBuilding === bk && currentView === 'building') renderBuildingView();
-  // Start realtime onSnapshot listeners so admin sees live updates
-  if (currentUser && currentUser.role === 'admin') {
+  // Start realtime onSnapshot listeners so everyone sees live updates
+  // (task completion timestamps sync live for all logged-in users, not just admin)
+  if (currentUser) {
     startRealtimeListeners(bk, viewingDate);
   }
 }
@@ -6308,7 +6309,7 @@ async function refreshCurrentView() {
 // current floor data and restart listeners so timestamps appear immediately.
 document.addEventListener('visibilitychange', async function() {
   if (document.hidden) return;                          // tab going away — nothing to do
-  if (!currentUser || currentUser.role !== 'admin') return;
+  if (!currentUser) return;
   if (!currentBuilding || currentView !== 'building') return;
   try {
     // Re-fetch the current floor doc from Firestore directly
