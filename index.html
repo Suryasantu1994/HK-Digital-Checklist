@@ -1421,8 +1421,8 @@ function _restoreNoteFocus(captured) {
   }
 }
 
-function _applyDocSnapshot(building, fn, data) {
-  const date = viewingDate;
+function _applyDocSnapshot(building, fn, data, date) {
+  date = date || viewingDate;
   // checked
   if (data.checked) localStorage.setItem(stateKey(building, fn, date), JSON.stringify(data.checked));
   // notes
@@ -1470,9 +1470,12 @@ function startRealtimeListeners(bk, date) {
     const docId = _fsId('cl', bk, fn, date);
     const unsub = db.collection('checklist').doc(docId).onSnapshot(snap => {
       if (!snap.exists) return;
-      _applyDocSnapshot(bk, fn, snap.data());
-      // Re-render only if admin is currently viewing this building
-      if (currentBuilding === bk && currentView === 'building') {
+      _applyDocSnapshot(bk, fn, snap.data(), date);
+      // Re-render only if this user is currently viewing this building on
+      // this same date — same guard used for the Building Remarks listener,
+      // so task completion timestamps and item notes stay in sync the same
+      // way remarks do for every logged-in user, not just admin.
+      if (currentBuilding === bk && currentView === 'building' && viewingDate === date) {
         if (currentFloor === fn) renderFloorItems();
         // Always refresh floor progress bar & header
         renderBuildingView();
