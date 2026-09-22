@@ -1378,9 +1378,19 @@ function _stopAllRealtimeListeners() {
 function _captureNoteFocus() {
   const active = document.activeElement;
   if (active && active.tagName === 'TEXTAREA') {
+    // Building Remarks textarea (not inside a per-item note row)
+    if (active.id === 'remarkTextarea') {
+      return {
+        type: 'remark',
+        val: active.value,
+        selStart: active.selectionStart,
+        selEnd: active.selectionEnd
+      };
+    }
     const row = active.closest('.note-row');
     if (row && row.id && row.id.indexOf('note-row-') === 0) {
       return {
+        type: 'note',
         idx: row.id.slice('note-row-'.length),
         val: active.value,
         selStart: active.selectionStart,
@@ -1392,6 +1402,15 @@ function _captureNoteFocus() {
 }
 function _restoreNoteFocus(captured) {
   if (!captured) return;
+  if (captured.type === 'remark') {
+    const ta = document.getElementById('remarkTextarea');
+    if (ta) {
+      ta.value = captured.val;
+      ta.focus();
+      try { ta.setSelectionRange(captured.selStart, captured.selEnd); } catch(e) {}
+    }
+    return;
+  }
   const row = document.getElementById('note-row-' + captured.idx);
   const ta = row ? row.querySelector('textarea') : null;
   if (ta) {
@@ -1461,7 +1480,20 @@ function startRealtimeListeners(bk, date) {
     }, err => console.warn('Realtime listener error:', fn, err));
     _realtimeUnsubs[docId] = unsub;
   });
-  console.log(`✅ Realtime listeners active for ${bk} (${allFloors.length} floors)`);
+
+  // Building Remarks — separate collection from checklist items, so it needs
+  // its own live listener to actually sync across users without a refresh.
+  const remarkDocId = _fsId('remark', bk, date);
+  const remarkUnsub = db.collection('remarks').doc(remarkDocId).onSnapshot(snap => {
+    if (!snap.exists) return;
+    localStorage.setItem(remarkKey(bk, date), snap.data().remark || '');
+    if (currentBuilding === bk && currentView === 'building' && viewingDate === date) {
+      renderBuildingView();
+    }
+  }, err => console.warn('Remarks realtime listener error:', err));
+  _realtimeUnsubs[remarkDocId] = remarkUnsub;
+
+  console.log(`✅ Realtime listeners active for ${bk} (${allFloors.length} floors + remarks)`);
 }
 
 // ── DATE HELPERS ──────────────────────────────────────────────────────────────
@@ -6381,8 +6413,18 @@ document.addEventListener('visibilitychange', async function() {
     if (snap && snap.exists) {
       _applyDocSnapshot(currentBuilding, currentFloor, snap.data());
       renderFloorItems();
-      renderBuildingView();
     }
+    // Also re-fetch Building Remarks directly — it lives in its own collection
+    // and isn't part of the checklist doc snapshot above.
+    const remarkDocId = _fsId('remark', currentBuilding, viewingDate);
+    const remarkSnap = await Promise.race([
+      db.collection('remarks').doc(remarkDocId).get(),
+      new Promise((_,rej) => setTimeout(() => rej(new Error('timeout')), 5000))
+    ]).catch(() => null);
+    if (remarkSnap && remarkSnap.exists) {
+      localStorage.setItem(remarkKey(currentBuilding, viewingDate), remarkSnap.data().remark || '');
+    }
+    renderBuildingView();
     // Restart listeners (Firestore SDK may have internally reconnected but restart
     // ensures onSnapshot callbacks are live again after a long background pause)
     startRealtimeListeners(currentBuilding, viewingDate);
