@@ -1470,7 +1470,7 @@ function startRealtimeListeners(bk, date) {
     const docId = _fsId('cl', bk, fn, date);
     const unsub = db.collection('checklist').doc(docId).onSnapshot(snap => {
       if (!snap.exists) return;
-      _applyDocSnapshot(bk, fn, snap.data(), date);
+      _applyDocSnapshot(bk, fn, _normDoc(snap.data()), date);
       // Re-render only if this user is currently viewing this building on
       // this same date — same guard used for the Building Remarks listener,
       // so task completion timestamps and item notes stay in sync the same
@@ -1543,6 +1543,37 @@ function _fsSet(collName, docId, field, value, lsKey) {
   _fsWrite(collName, docId, data, lsKey, value);
 }
 
+// set({merge:true}) treats 'notes.3' as a literal field name, so other users
+// never see it under data.notes. Expand dotted keys into nested maps.
+function _expandDotted(data) {
+  var out = {};
+  Object.keys(data || {}).forEach(function(k) {
+    var parts = k.split('.');
+    if (parts.length === 1) { out[k] = data[k]; return; }
+    var cur = out;
+    for (var i = 0; i < parts.length - 1; i++) {
+      if (typeof cur[parts[i]] !== 'object' || cur[parts[i]] === null) cur[parts[i]] = {};
+      cur = cur[parts[i]];
+    }
+    cur[parts[parts.length - 1]] = data[k];
+  });
+  return out;
+}
+// Read side: also fold in legacy literal 'notes.3' style fields saved earlier.
+function _normDoc(data) {
+  data = data || {};
+  var legacy = {};
+  Object.keys(data).forEach(function(k) {
+    if (k.indexOf('.') > 0) legacy[k] = data[k];
+  });
+  if (!Object.keys(legacy).length) return data;
+  var ex = _expandDotted(legacy), out = Object.assign({}, data);
+  ['notes','notets','ts','freq'].forEach(function(f) {
+    if (ex[f]) out[f] = Object.assign({}, ex[f], data[f] || {});
+  });
+  return out;
+}
+
 // Write to Firestore + mirror to localStorage immediately
 function _fsWrite(collName, docId, data, lsKey, lsValue) {
   // localStorage first — instant and synchronous
@@ -1556,7 +1587,7 @@ function _fsWrite(collName, docId, data, lsKey, lsValue) {
   // Firestore async — best effort
   var db = _getDb();
   if (db) {
-    db.collection(collName).doc(docId).set(data, { merge: true })
+    db.collection(collName).doc(docId).set(_expandDotted(data), { merge: true })
       .then(function() { /* saved */ })
       .catch(function(e) { console.error('Firestore write failed:', collName, '/', docId, '-', e.code, e.message); });
   }
@@ -1589,7 +1620,7 @@ async function preloadBuildingData(building, date) {
       var lsKey = stateKey(building, fn, date);
       return db.collection('checklist').doc(docId).get().then(function(snap) {
         if (!snap.exists) return;
-        var data = snap.data();
+        var data = _normDoc(snap.data());
         localStorage.setItem(lsKey, JSON.stringify(data.checked || {}));
         // Notes and freq logs now live as maps inside this same checklist doc
         // (folded in to avoid one Firestore read per item).
