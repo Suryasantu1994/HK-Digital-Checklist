@@ -1083,6 +1083,68 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .fb-rbd-bar-wrap{flex:1;height:8px;background:rgba(0,107,107,.1);border-radius:100px;overflow:hidden;}
 .fb-rbd-bar{height:100%;border-radius:100px;transition:width .4s ease;}
 .fb-rbd-count{font-size:11px;color:var(--text-muted);min-width:56px;white-space:nowrap;}
+
+/* STAFF TRAINING */
+.tr-card{background:var(--white);border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:20px;}
+.tr-card-hdr{background:linear-gradient(135deg,var(--teal-dark),var(--teal));padding:14px 22px;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.tr-card-hdr h3{font-family:"Playfair Display",serif;font-size:17px;}
+.tr-card-hdr span{font-size:12px;opacity:.85;}
+.tr-toggle{cursor:pointer;user-select:none;}
+.tr-chev{display:inline-block;transition:transform .2s;font-size:15px;margin-right:4px;}
+.tr-card.open .tr-chev{transform:rotate(90deg);}
+.tr-body{display:none;}
+.tr-card.open .tr-body{display:block;}
+.tr-add{display:flex;gap:8px;flex-wrap:wrap;padding:14px 22px;background:var(--teal-pale);border-bottom:1px solid var(--border);}
+.tr-add input{padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--white);color:var(--text);}
+.tr-add input:focus{outline:none;border-color:var(--teal);}
+.tr-row{display:flex;align-items:center;gap:14px;padding:12px 22px;border-bottom:1px solid var(--bg);flex-wrap:wrap;}
+.tr-row:last-child{border-bottom:none;}
+.tr-row-main{flex:1;min-width:220px;}
+.tr-title{font-size:14px;font-weight:600;color:var(--text);}
+.tr-desc{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.tr-meta{font-size:11px;margin-top:4px;font-weight:600;}
+.tr-meta.done{color:var(--green);}
+.tr-meta.pend{color:var(--orange);}
+.tr-meta.over{color:var(--red);}
+.tr-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.tr-row{display:block;padding:14px 22px;}
+.tr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.tr-sub{font-size:11px;color:var(--text-muted);margin-top:3px;}
+.tr-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;white-space:nowrap;}
+.tr-badge.done{background:#E6F6EC;color:var(--green);}.tr-badge.prog{background:#FFF0E6;color:var(--orange);}.tr-badge.pend{background:var(--bg);color:var(--text-muted);}.tr-badge.over{background:#FFF0F0;color:var(--red);}
+.tr-prog-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin:12px 0 5px;}
+.tr-bar{height:7px;background:var(--bg);border-radius:6px;overflow:hidden;}
+.tr-bar-fill{height:100%;border-radius:6px;background:var(--teal);}.tr-bar-fill.done{background:var(--green);}.tr-bar-fill.over{background:var(--red);}
+.tr-stats{display:flex;gap:40px;margin:12px 0;flex-wrap:wrap;}
+.tr-stat-l{font-size:11px;color:var(--text-muted);}.tr-stat-v{font-size:18px;font-weight:700;color:var(--text);}
+.tr-filter{display:flex;align-items:center;gap:8px;padding:10px 22px;border-bottom:1px solid var(--border);}
+.tr-filter label{font-size:12px;font-weight:700;color:var(--text-muted);}
+.tr-filter select{padding:6px 10px;border:2px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--white);color:var(--text);}
+.tr-empty{padding:22px;text-align:center;color:var(--text-muted);font-size:13px;}
+.tr-roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;max-height:280px;overflow-y:auto;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;}
+.tr-name{display:flex;align-items:center;gap:8px;padding:8px 10px;border:2px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;font-size:13px;font-weight:500;user-select:none;}
+.tr-name.on{border-color:var(--teal);background:var(--teal-pale);color:var(--teal-dark);font-weight:600;}
+.tr-name input{accent-color:var(--teal);width:16px;height:16px;}
+.tr-hist{padding:10px 0;border-bottom:1px solid var(--bg);font-size:13px;}
+.tr-hist:last-child{border-bottom:none;}
+.tr-chip{display:inline-block;background:var(--teal-pale);border:1px solid var(--teal-mid);color:var(--teal-dark);font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;margin:2px 3px 2px 0;}
+.tr-chip.abs{background:#FFF0F0;border-color:#FFCCCC;color:#C0392B;}
+.tr-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;}
+.tr-kpi{background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:var(--dash-shadow);padding:14px 16px;border-top:4px solid var(--teal);}
+.tr-kpi.gold{border-top-color:var(--gold);}.tr-kpi.green{border-top-color:var(--green);}.tr-kpi.orange{border-top-color:var(--orange);}.tr-kpi.red{border-top-color:var(--red);}.tr-kpi.blue{border-top-color:var(--blue);}
+.tr-kpi-lbl{font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;}
+.tr-kpi-val{font-size:24px;font-weight:700;color:var(--teal-dark);margin-top:4px;line-height:1.15;word-break:break-word;}
+.tr-kpi-sub{font-size:11px;color:var(--text-muted);margin-top:3px;}
+.tr-stars{display:inline-flex;gap:1px;vertical-align:middle;}
+.tr-star{font-size:15px;line-height:1;color:#D5DEDE;}
+.tr-star.on{color:var(--gold);}
+.tr-stars.input .tr-star{font-size:24px;cursor:pointer;padding:0 1px;user-select:none;}
+.tr-stars.input .tr-star:hover{transform:scale(1.15);}
+.tr-rate-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;border-bottom:1px solid var(--white);font-size:13px;}
+.tr-rate-list{max-height:220px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:10px;}
+.tr-rate-box{background:var(--teal-pale);border:1px solid var(--teal-mid);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.tr-hdr-stars .tr-star{color:rgba(255,255,255,.35);}.tr-hdr-stars .tr-star.on{color:#FFD76A;}
+
 </style>
 </head>
 <body>
@@ -1332,6 +1394,31 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
     <div style="margin-top:16px;text-align:center;">
       <button class="btn btn-p" onclick="printQrSheet()">🖨 Print All</button>
     </div>
+  </div>
+</div>
+
+<!-- TRAINING: CONDUCT SESSION MODAL -->
+<div class="pwd-modal-overlay" id="trConductModal">
+  <div class="pwd-modal" style="width:620px;max-height:92vh;overflow-y:auto;">
+    <button class="pwd-modal-close" onclick="closeTrainConduct()">✕</button>
+    <h3>🎓 Conduct Training</h3>
+    <div id="trConductBody"></div>
+  </div>
+</div>
+<!-- TRAINING: HISTORY MODAL -->
+<div class="pwd-modal-overlay" id="trHistoryModal">
+  <div class="pwd-modal" style="width:620px;max-height:92vh;overflow-y:auto;">
+    <button class="pwd-modal-close" onclick="document.getElementById('trHistoryModal').classList.remove('open')">✕</button>
+    <h3 id="trHistTitle">Training History</h3>
+    <div id="trHistBody"></div>
+  </div>
+</div>
+
+<div class="pwd-modal-overlay" id="trTopicModal">
+  <div class="pwd-modal" style="width:460px;max-width:95vw;">
+    <button class="pwd-modal-close" onclick="closeTrTopicModal()">✕</button>
+    <h3 id="trTopicModalTitle">Edit Topic</h3>
+    <div id="trTopicModalBody"></div>
   </div>
 </div>
 
@@ -2096,6 +2183,7 @@ async function buildNav() {
   }
   const fbCount = getAllFeedback().length;
   const fbBadge = fbCount > 0 ? ` <span style="background:#7C3AED;color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;margin-left:4px;">${fbCount}</span>` : '';
+  html += `<button class="nav-tab" id="tab-training" onclick="showTraining()">🎓 Training</button>`;
   html += `<button class="nav-tab" id="tab-feedback" onclick="showFeedbackAdmin()">⭐ Feedback${fbBadge}</button>`;
   if (currentUser.role === 'admin') {
     html += `<button class="nav-tab" id="tab-supervisors" onclick="showSupervisorAllocation()">👷 Supervisors</button>`;
@@ -5522,6 +5610,475 @@ function supDownloadImg() {
   a.download = `GITAM_Supervisor_Allocation_${supDateKey(supViewDate)}.png`;
   a.click();
 }
+
+// ── STAFF TRAINING ────────────────────────────────────────────────────────────
+// Admin assigns topics per building; supervisors conduct sessions & tick attendance.
+function trE(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function trTopicsKey(bk){ return 'gitam_train_topics_' + bk; }
+function trSessKey(bk){ return 'gitam_train_sessions_' + bk; }
+function getTrainTopics(bk){ return _lsRead(trTopicsKey(bk), []); }
+function setTrainTopics(bk, arr){
+  _fsWrite('trainingTopics', _fsId('trainTopics', bk), { topics: arr, building: bk }, trTopicsKey(bk), arr);
+}
+function getTrainSessions(bk){ return _lsRead(trSessKey(bk), {}); }   // map: docId -> session
+function trSessId(bk, topicId, date){ return _fsId('train', bk, topicId, date); }
+function saveTrainSession(s){
+  const id = trSessId(s.building, s.topicId, s.date);
+  const map = getTrainSessions(s.building);
+  map[id] = s;
+  localStorage.setItem(trSessKey(s.building), JSON.stringify(map));
+  const db = _getDb();
+  if (db) db.collection('trainingSessions').doc(id).set(s).catch(function(e){ console.warn('Training save failed:', e); });
+}
+function deleteTrainSession(bk, id){
+  if (!confirm('Delete this training session record?')) return;
+  const map = getTrainSessions(bk);
+  delete map[id];
+  localStorage.setItem(trSessKey(bk), JSON.stringify(map));
+  const db = _getDb();
+  if (db) db.collection('trainingSessions').doc(id).delete().catch(function(){});
+  document.getElementById('trHistoryModal').classList.remove('open');
+  renderTraining();
+  showToast('🗑 Session deleted');
+}
+
+async function loadTrainingData(bks){
+  const db = _getDb();
+  if (!db) return;
+  await Promise.all(bks.map(async function(bk){
+    try {
+      const t = await db.collection('trainingTopics').doc(_fsId('trainTopics', bk)).get();
+      if (t.exists) localStorage.setItem(trTopicsKey(bk), JSON.stringify(t.data().topics || []));
+      const qs = await db.collection('trainingSessions').where('building', '==', bk).get();
+      const map = {};
+      qs.docs.forEach(function(d){ map[d.id] = d.data(); });
+      localStorage.setItem(trSessKey(bk), JSON.stringify(map));
+      const n = await db.collection('staffNames').doc(_fsId('staffNames', bk)).get();
+      if (n.exists && n.data().names) localStorage.setItem(staffNamesKey(bk), JSON.stringify(n.data().names));
+    } catch(e) { console.warn('Training load failed for', bk, e); }
+  }));
+}
+
+
+// ── Star-rating + KPI helpers ──
+function trStars(v){
+  v = Math.round(v || 0);
+  let h = '<span class="tr-stars">';
+  for (let i = 1; i <= 5; i++) h += '<span class="tr-star' + (i <= v ? ' on' : '') + '">★</span>';
+  return h + '</span>';
+}
+function trStarInput(kind, key, v){
+  let h = '<span class="tr-stars input">';
+  for (let i = 1; i <= 5; i++)
+    h += '<span class="tr-star' + (i <= (v || 0) ? ' on' : '') + '" onclick="trRate(\'' + kind + '\',' + key + ',' + i + ')" title="' + i + ' star' + (i > 1 ? 's' : '') + '">★</span>';
+  return h + '</span>';
+}
+function trAvg(arr){ return arr.length ? arr.reduce(function(a, b){ return a + b; }, 0) / arr.length : 0; }
+function trSessStats(sessList){
+  const staffR = [], supR = [];
+  let pres = 0, tot = 0;
+  sessList.forEach(function(s){
+    pres += s.attendees.length; tot += s.attendees.length + (s.absent || []).length;
+    Object.keys(s.staffRatings || {}).forEach(function(n){ if (s.staffRatings[n] > 0) staffR.push(s.staffRatings[n]); });
+    if (s.trainerRating > 0) supR.push(s.trainerRating);
+  });
+  return { n: sessList.length, att: tot ? Math.round(pres / tot * 100) : 0, staffAvg: trAvg(staffR), staffCnt: staffR.length, supAvg: trAvg(supR), supCnt: supR.length };
+}
+function trKpiCard(cls, lbl, val, sub){
+  return '<div class="tr-kpi ' + cls + '"><div class="tr-kpi-lbl">' + lbl + '</div><div class="tr-kpi-val">' + val + '</div><div class="tr-kpi-sub">' + sub + '</div></div>';
+}
+function trRenderKpis(){
+  const today = todayKey();
+  let all = [], topicsN = 0, doneN = 0, overdue = 0;
+  currentUser.access.forEach(function(bk){
+    const topics = getTrainTopics(bk), sess = Object.values(getTrainSessions(bk));
+    all = all.concat(sess);
+    topicsN += topics.length;
+    topics.forEach(function(t){
+      if (sess.some(function(s){ return s.topicId === t.id; })) doneN++;
+      else if (t.due && t.due < today) overdue++;
+    });
+  });
+  const st = trSessStats(all);
+  const supMap = {}, staffMap = {};
+  all.forEach(function(s){
+    if (s.trainerRating > 0 && s.trainer) (supMap[s.trainer] = supMap[s.trainer] || []).push(s.trainerRating);
+    Object.keys(s.staffRatings || {}).forEach(function(n){ if (s.staffRatings[n] > 0) (staffMap[n] = staffMap[n] || []).push(s.staffRatings[n]); });
+  });
+  function top(m){ let b = null, bv = -1; Object.keys(m).forEach(function(k){ const a = trAvg(m[k]); if (a > bv) { bv = a; b = k; } }); return b ? { name: b, avg: bv } : null; }
+  const ts = top(supMap), tst = top(staffMap);
+  return '<div class="tr-kpis">' +
+    trKpiCard('', '🎓 Sessions Held', st.n, doneN + ' of ' + topicsN + ' topics covered') +
+    trKpiCard('green', '✔ Avg Attendance', st.att + '%', 'across all sessions') +
+    trKpiCard('gold', '⭐ Avg Staff Rating', st.staffCnt ? st.staffAvg.toFixed(1) : '—', st.staffCnt ? trStars(st.staffAvg) + ' · ' + st.staffCnt + ' ratings' : 'No ratings yet') +
+    trKpiCard('blue', '👷 Avg Supervisor Rating', st.supCnt ? st.supAvg.toFixed(1) : '—', st.supCnt ? trStars(st.supAvg) + ' · ' + st.supCnt + ' ratings' : 'No ratings yet') +
+    trKpiCard('orange', '🏆 Top Supervisor', ts ? trE(ts.name) : '—', ts ? ts.avg.toFixed(1) + ' ★ avg' : 'Awaiting ratings') +
+    trKpiCard('gold', '🌟 Top Staff', tst ? trE(tst.name) : '—', tst ? tst.avg.toFixed(1) + ' ★ avg' : 'Awaiting ratings') +
+    trKpiCard(overdue ? 'red' : 'green', '⚠️ Overdue Topics', overdue, overdue ? 'need attention' : 'all on track') +
+    '</div>';
+}
+
+async function showTraining(){
+  _stopAllRealtimeListeners();
+  currentView = 'training';
+  currentBuilding = null;
+  setActiveTab('training');
+  renderTraining();
+  try { await Promise.race([loadTrainingData(currentUser.access), new Promise(function(r){ setTimeout(r, 5000); })]); } catch(e) {}
+  if (currentView === 'training') renderTraining();
+}
+
+function clearTrainingData(){
+  if (!currentUser || currentUser.role !== 'admin') { showToast('Admin only'); return; }
+  _trOpenModal('🗑 Clear Training Data',
+    '<p style="margin:0 0 12px;font-size:14px;">This permanently deletes <b>all training topics and session records</b> for all your buildings. This cannot be undone.</p>' +
+    '<p style="margin:0 0 6px;font-size:13px;">Type <b>DELETE</b> to confirm:</p>' +
+    '<input type="text" id="trClearConfirm" autocomplete="off" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:16px;">' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;">' +
+    '<button class="btn btn-s" onclick="closeTrTopicModal()">Cancel</button>' +
+    '<button class="btn btn-danger" onclick="confirmClearTrainingData()">Delete All</button></div>');
+}
+
+async function confirmClearTrainingData(){
+  const inp = document.getElementById('trClearConfirm');
+  if (!inp || inp.value.trim() !== 'DELETE') { showToast('Type DELETE to confirm'); return; }
+  closeTrTopicModal();
+  const db = _getDb();
+  let failed = false;
+  for (const bk of currentUser.access) {
+    setTrainTopics(bk, []);
+    if (db) {
+      try {
+        const qs = await db.collection('trainingSessions').where('building', '==', bk).get();
+        await Promise.all(qs.docs.map(function(d){ return d.ref.delete(); }));
+      } catch(e) { failed = true; console.error('Clear sessions failed for', bk, e); }
+    }
+    localStorage.setItem(trSessKey(bk), '{}');
+  }
+  renderTraining();
+  showToast(failed ? '⚠️ Cleared locally; cloud delete failed (check Firestore rules)' : '🗑 Training data cleared');
+}
+
+function renderTraining(){
+  const B = getBuildings();
+  const isAdmin = currentUser.role === 'admin';
+  const today = todayKey();
+  let html = '<div class="dash-header"><div class="dash-header-left"><h2>🎓 Staff Training</h2>' +
+    '<p>' + (isAdmin ? 'Assign training topics to each building and track attendance.' : 'Conduct the topics assigned by Admin and tick attendance.') + '</p></div>' +
+    '<div class="dash-actions no-print"><button class="btn btn-s" onclick="exportTrainingCsv()">📥 Export CSV</button>' +
+    (isAdmin ? '<button class="btn btn-danger" onclick="clearTrainingData()">🗑 Clear Training Data</button>' : '') + '</div></div>';
+  html += trRenderKpis();
+
+  currentUser.access.forEach(function(bk, i){
+    const topics = getTrainTopics(bk);
+    const sess = Object.values(getTrainSessions(bk));
+    const doneCnt = topics.filter(function(t){ return sess.some(function(s){ return s.topicId === t.id; }); }).length;
+    const bst = trSessStats(sess);
+    let rows = '', items = [], filterBar = '';
+    if (!topics.length) {
+      rows = '<div class="tr-empty">No topics assigned yet.' + (isAdmin ? '' : ' Admin will assign topics for this building.') + '</div>';
+    } else {
+      items = topics.map(function(t){
+        const ss = sess.filter(function(s){ return s.topicId === t.id; }).sort(function(a, b){ return b.date.localeCompare(a.date); });
+        const last = ss[0];
+        const seen = new Set(), came = new Set();
+        ss.forEach(function(s){ s.attendees.forEach(function(n){ seen.add(n); came.add(n); }); (s.absent || []).forEach(function(n){ seen.add(n); }); });
+        const pct = seen.size ? Math.round(came.size / seen.size * 100) : 0;
+        const rated = ss.filter(function(s){ return s.trainerRating; });
+        const avgR = rated.length ? rated.reduce(function(a, s){ return a + s.trainerRating; }, 0) / rated.length : 0;
+        const overdue = !last && t.due && t.due < today;
+        let st = 'pend', stTxt = 'Not Started';
+        if (overdue) { st = 'over'; stTxt = 'Overdue'; }
+        else if (last) { st = pct >= 100 ? 'done' : 'prog'; stTxt = pct >= 100 ? 'Completed' : 'In Progress'; }
+        const tot = last ? last.attendees.length + (last.absent || []).length : 0;
+        const sub = (last ? ss.length + ' session' + (ss.length > 1 ? 's' : '') + ' · last ' + formatDateShort(last.date) + ' · by ' + trE(last.trainer) : (t.due ? 'Due ' + formatDateShort(t.due) : 'Not conducted yet'));
+        return {st: st, html: '<div class="tr-row"><div class="tr-top"><div class="tr-row-main"><div class="tr-title">' + trE(t.title) + '</div>' +
+          (t.desc ? '<div class="tr-desc">' + trE(t.desc) + '</div>' : '') + '<div class="tr-sub">' + sub + '</div></div>' +
+          '<span class="tr-badge ' + st + '">' + stTxt + '</span></div>' +
+          '<div class="tr-prog-lbl"><span>Training completion</span><b>' + pct + '%</b></div>' +
+          '<div class="tr-bar"><div class="tr-bar-fill ' + st + '" style="width:' + pct + '%"></div></div>' +
+          '<div class="tr-stats"><div><div class="tr-stat-l">Last attendance</div><div class="tr-stat-v">' + (last ? last.attendees.length + '/' + tot : '—') + '</div></div>' +
+          '<div><div class="tr-stat-l">Trainer rating</div><div class="tr-stat-v">' + (avgR ? avgR.toFixed(1) + ' ' + trStars(avgR) : '—') + '</div></div></div>' +
+          '<div class="tr-actions no-print">' +
+          '<button class="btn btn-p" style="padding:6px 12px;font-size:12px;" onclick="openTrainConduct(\'' + esc(bk) + '\',\'' + t.id + '\')">▶ Conduct Training</button>' +
+          (ss.length ? '<button class="btn btn-s" style="padding:6px 12px;font-size:12px;" onclick="openTrainHistory(\'' + esc(bk) + '\',\'' + t.id + '\')">📋 View History</button>' : '') +
+          (isAdmin ? '<button class="btn btn-s" style="padding:6px 10px;font-size:12px;" title="Edit topic" onclick="editTrainTopic(' + i + ',\'' + t.id + '\')">✏️ Edit</button>' : '') +
+          (isAdmin ? '<button class="btn btn-danger" style="padding:6px 10px;font-size:12px;" title="Delete topic" onclick="deleteTrainTopic(' + i + ',\'' + t.id + '\')">🗑 Delete</button>' : '') +
+          '</div></div>'};
+      });
+      const f = _trFilter[bk] || 'all';
+      const cnt = function(k){ return items.filter(function(x){ return x.st === k; }).length; };
+      const opts = [['all', 'All topics (' + items.length + ')'], ['done', 'Completed (' + cnt('done') + ')'], ['prog', 'In Progress (' + cnt('prog') + ')'], ['pend', 'Not Started (' + cnt('pend') + ')'], ['over', 'Overdue (' + cnt('over') + ')']];
+      filterBar = '<div class="tr-filter no-print"><label>Status</label><select onchange="setTrFilter(\'' + esc(bk) + '\',this.value)">' +
+        opts.map(function(o){ return '<option value="' + o[0] + '"' + (o[0] === f ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>';
+      const shown = items.filter(function(x){ return f === 'all' || x.st === f; });
+      rows = shown.length ? shown.map(function(x){ return x.html; }).join('') : '<div class="tr-empty">No topics with this status.</div>';
+    }
+    const addForm = isAdmin
+      ? '<div class="tr-add no-print"><input type="text" id="trTitle_' + i + '" placeholder="Topic title…" style="flex:2;min-width:180px;" maxlength="120">' +
+        '<input type="text" id="trDesc_' + i + '" placeholder="Description (optional)" style="flex:2;min-width:160px;" maxlength="200">' +
+        '<input type="date" id="trDue_' + i + '" title="Target date (optional)">' +
+        '<button class="btn btn-p" onclick="addTrainTopic(' + i + ')">＋ Assign Topic</button></div>'
+      : '';
+    const isOpen = !!_trOpen[bk];
+    html += '<div class="tr-card' + (isOpen ? ' open' : '') + '"><div class="tr-card-hdr tr-toggle" onclick="toggleTrCard(this,\'' + esc(bk) + '\')"><h3><span class="tr-chev">▸</span> 🏢 ' + (B[bk] ? B[bk].name : bk) + '</h3><span>' + doneCnt + ' of ' + topics.length + ' topics conducted' +
+      (bst.supCnt ? ' · 👷 <span class="tr-hdr-stars">' + trStars(bst.supAvg) + '</span> ' + bst.supAvg.toFixed(1) : '') +
+      (bst.staffCnt ? ' · 👥 <span class="tr-hdr-stars">' + trStars(bst.staffAvg) + '</span> ' + bst.staffAvg.toFixed(1) : '') + '</span></div><div class="tr-body">' + addForm + filterBar + rows + '</div></div>';
+  });
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+var _trFilter = {};
+var _trOpen = {};
+function toggleTrCard(el, bk){ _trOpen[bk] = !_trOpen[bk]; el.parentNode.classList.toggle('open', _trOpen[bk]); }
+function setTrFilter(bk, v){ _trFilter[bk] = v; renderTraining(); }
+function addTrainTopic(i){
+  const bk = currentUser.access[i];
+  const title = (document.getElementById('trTitle_' + i).value || '').trim();
+  if (!title) { showToast('Please enter a topic title'); return; }
+  const topics = getTrainTopics(bk);
+  topics.push({
+    id: 't' + Date.now().toString(36),
+    title: title,
+    desc: (document.getElementById('trDesc_' + i).value || '').trim(),
+    due: document.getElementById('trDue_' + i).value || '',
+    by: currentUser.label,
+    ts: new Date().toISOString()
+  });
+  setTrainTopics(bk, topics);
+  renderTraining();
+  showToast('✅ Topic assigned');
+}
+
+function closeTrTopicModal(){ document.getElementById('trTopicModal').classList.remove('open'); }
+function _trOpenModal(title, body){
+  document.getElementById('trTopicModalTitle').textContent = title;
+  document.getElementById('trTopicModalBody').innerHTML = body;
+  document.getElementById('trTopicModal').classList.add('open');
+}
+
+function editTrainTopic(i, id){
+  const bk = currentUser.access[i];
+  const t = getTrainTopics(bk).filter(function(x){ return x.id === id; })[0];
+  if (!t) return;
+  const st = 'width:100%;margin-bottom:10px;box-sizing:border-box;';
+  _trOpenModal('✏️ Edit Topic',
+    '<label style="font-size:12px;font-weight:600;">Title</label>' +
+    '<input type="text" id="trEdTitle" maxlength="120" style="' + st + '" value="' + trE(t.title) + '">' +
+    '<label style="font-size:12px;font-weight:600;">Description (optional)</label>' +
+    '<input type="text" id="trEdDesc" maxlength="200" style="' + st + '" value="' + trE(t.desc || '') + '">' +
+    '<label style="font-size:12px;font-weight:600;">Target date (optional)</label>' +
+    '<input type="date" id="trEdDue" style="' + st + '" value="' + trE(t.due || '') + '">' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">' +
+    '<button class="btn btn-s" onclick="closeTrTopicModal()">Cancel</button>' +
+    '<button class="btn btn-p" onclick="saveTrainTopicEdit(' + i + ',\'' + id + '\')">Save</button></div>');
+}
+
+function saveTrainTopicEdit(i, id){
+  const bk = currentUser.access[i];
+  const topics = getTrainTopics(bk);
+  const t = topics.filter(function(x){ return x.id === id; })[0];
+  if (!t) { closeTrTopicModal(); return; }
+  const title = (document.getElementById('trEdTitle').value || '').trim();
+  if (!title) { showToast('Title cannot be empty'); return; }
+  t.title = title;
+  t.desc = (document.getElementById('trEdDesc').value || '').trim();
+  t.due = document.getElementById('trEdDue').value || '';
+  t.editedBy = currentUser.label;
+  t.editedTs = new Date().toISOString();
+  setTrainTopics(bk, topics);
+  closeTrTopicModal();
+  renderTraining();
+  showToast('✏️ Topic updated');
+}
+
+function deleteTrainTopic(i, id){
+  const bk = currentUser.access[i];
+  const t = getTrainTopics(bk).filter(function(x){ return x.id === id; })[0];
+  if (!t) return;
+  _trOpenModal('🗑 Delete Topic',
+    '<p style="margin:0 0 16px;font-size:14px;">Delete <b>' + trE(t.title) + '</b>? Its session records will also be permanently deleted.</p>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;">' +
+    '<button class="btn btn-s" onclick="closeTrTopicModal()">Cancel</button>' +
+    '<button class="btn btn-danger" onclick="confirmDeleteTrainTopic(' + i + ',\'' + id + '\')">Delete</button></div>');
+}
+
+function confirmDeleteTrainTopic(i, id){
+  const bk = currentUser.access[i];
+  setTrainTopics(bk, getTrainTopics(bk).filter(function(t){ return t.id !== id; }));
+  // also remove this topic's session records (local + Firestore)
+  const sMap = getTrainSessions(bk), db = _getDb();
+  Object.keys(sMap).forEach(function(sid){
+    if (sMap[sid] && sMap[sid].topicId === id) {
+      delete sMap[sid];
+      if (db) db.collection('trainingSessions').doc(sid).delete().catch(function(){});
+    }
+  });
+  localStorage.setItem(trSessKey(bk), JSON.stringify(sMap));
+  closeTrTopicModal();
+  renderTraining();
+  showToast('🗑 Topic removed');
+}
+
+// ── Conduct session + attendance tick-list ──
+let _trC = null;
+function trLoadExisting(){
+  const c = _trC;
+  const ex = getTrainSessions(c.bk)[trSessId(c.bk, c.topicId, c.date)];
+  const base = getStaffNamesList(c.bk).slice();
+  c.extras.forEach(function(n){ if (base.indexOf(n) < 0) base.push(n); });
+  if (ex) {
+    ex.attendees.concat(ex.absent || []).forEach(function(n){ if (base.indexOf(n) < 0) base.push(n); });
+    c.sel = new Set(ex.attendees);
+    c.trainer = ex.trainer || c.trainer;
+    c.remarks = ex.remarks || '';
+    c.ratings = Object.assign({}, ex.staffRatings || {});
+    c.trainerRating = ex.trainerRating || 0;
+    c.editing = true;
+  } else {
+    c.sel = new Set();
+    c.remarks = '';
+    c.ratings = {};
+    c.trainerRating = 0;
+    c.editing = false;
+  }
+  c.roster = base;
+}
+
+function openTrainConduct(bk, topicId){
+  const topic = getTrainTopics(bk).filter(function(t){ return t.id === topicId; })[0];
+  if (!topic) return;
+  let trainer = '';
+  try { const s = getSupForBuildingOnDate(bk, todayKey()).filter(function(x){ return !x.isOff; })[0]; if (s) trainer = s.supervisor; } catch(e) {}
+  if (!trainer && currentUser.role !== 'admin') trainer = currentUser.label;
+  _trC = { bk: bk, topicId: topicId, title: topic.title, date: todayKey(), trainer: trainer, extras: [], sel: new Set(), roster: [], remarks: '', editing: false, ratings: {}, trainerRating: 0 };
+  trLoadExisting();
+  renderTrainConduct();
+  document.getElementById('trConductModal').classList.add('open');
+}
+
+function closeTrainConduct(){ document.getElementById('trConductModal').classList.remove('open'); _trC = null; }
+
+function renderTrainConduct(){
+  const c = _trC; if (!c) return;
+  const isAdmin = currentUser.role === 'admin';
+  const names = c.roster.map(function(n, i){
+    const on = c.sel.has(n);
+    return '<label class="tr-name' + (on ? ' on' : '') + '"><input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="trToggle(' + i + ')">' + trE(n) + '</label>';
+  }).join('');
+  const body =
+    '<div class="modal-loc" style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">' + trE(c.bk) + ' — <strong style="color:var(--teal-dark)">' + trE(c.title) + '</strong>' +
+    (c.editing ? ' <span class="req-badge">Editing saved session</span>' : '') + '</div>' +
+    '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">' +
+      '<div class="form-group" style="flex:1;min-width:150px;margin-bottom:0;"><label>Date</label><input type="date" value="' + c.date + '" ' + (isAdmin ? '' : 'disabled') + ' max="' + todayKey() + '" onchange="trOnDate(this.value)" style="padding:10px 12px;"></div>' +
+      '<div class="form-group" style="flex:2;min-width:180px;margin-bottom:0;"><label>Trainer (Supervisor)</label><input type="text" value="' + trE(c.trainer) + '" oninput="_trC.trainer=this.value" placeholder="Supervisor name" style="padding:10px 12px;"></div>' +
+    '</div>' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">' +
+      '<div style="font-size:12px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.5px;">✔ Attendance — <span id="trCount">' + c.sel.size + ' of ' + c.roster.length + ' present</span></div>' +
+      '<div style="display:flex;gap:6px;"><button class="btn btn-s" style="padding:4px 10px;font-size:11px;" onclick="trSelAll(true)">Select All</button><button class="btn btn-s" style="padding:4px 10px;font-size:11px;" onclick="trSelAll(false)">Clear</button></div>' +
+    '</div>' +
+    (c.roster.length ? '<div class="tr-roster">' + names + '</div>' : '<div class="tr-empty">No staff names for this building. Add names (Admin → Staff Names) or add below.</div>') +
+    '<div style="display:flex;gap:8px;margin-top:10px;"><input type="text" id="trExtraName" placeholder="Add a staff name not in list…" maxlength="60" style="flex:1;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;" onkeydown="if(event.key===\'Enter\')trAddExtra()"><button class="btn btn-s" onclick="trAddExtra()">+ Add</button></div>' +
+    '<div class="tr-rate-box" style="margin-top:14px;"><div><strong style="font-size:13px;color:var(--teal-dark);">👷 Rate Supervisor / Trainer</strong><div style="font-size:11px;color:var(--text-muted);">How effective was the session?' + (_trIsAdmin() ? '' : ' · <em>Rated by Admin only</em>') + '</div></div>' + (_trIsAdmin() ? trStarInput('sup', 0, c.trainerRating) : '<span style=\'opacity:.55;pointer-events:none;\'>' + trStars(c.trainerRating) + '</span>') + '</div>' +
+    '<div style="font-size:12px;font-weight:700;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px;">⭐ Rate Staff (present only)</div>' +
+    (c.sel.size ? '<div class="tr-rate-list">' + c.roster.map(function(n, i){ return c.sel.has(n) ? '<div class="tr-rate-row"><span>' + trE(n) + '</span>' + trStarInput('staff', i, c.ratings[n] || 0) + '</div>' : ''; }).join('') + '</div>' : '<div class="tr-empty" style="padding:10px;">Tick attendees above to rate them.</div>') +
+    '<div class="form-group" style="margin:14px 0 0;"><label>Remarks (optional)</label><input type="text" value="' + trE(c.remarks) + '" oninput="_trC.remarks=this.value" maxlength="300" placeholder="Notes about the session" style="padding:10px 12px;"></div>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;"><button class="btn btn-s" onclick="closeTrainConduct()">Cancel</button><button class="btn btn-p" onclick="saveTrainConduct()">💾 Save Attendance</button></div>';
+  document.getElementById('trConductBody').innerHTML = body;
+}
+
+function _trIsAdmin(){ return !!(currentUser && currentUser.role === 'admin'); }
+function trRate(kind, i, v){
+  if (kind === 'sup' && !_trIsAdmin()) return;
+  if (kind === 'sup') _trC.trainerRating = (_trC.trainerRating === v ? 0 : v);
+  else { const n = _trC.roster[i]; _trC.ratings[n] = (_trC.ratings[n] === v ? 0 : v); }
+  renderTrainConduct();
+}
+function trToggle(i){
+  const n = _trC.roster[i];
+  if (_trC.sel.has(n)) _trC.sel.delete(n); else _trC.sel.add(n);
+  renderTrainConduct();
+}
+function trSelAll(on){
+  _trC.sel = on ? new Set(_trC.roster) : new Set();
+  renderTrainConduct();
+}
+function trAddExtra(){
+  const el = document.getElementById('trExtraName');
+  const n = (el.value || '').trim();
+  if (!n) return;
+  if (_trC.roster.indexOf(n) >= 0) { showToast('⚠️ Already in list'); return; }
+  _trC.extras.push(n);
+  _trC.roster.push(n);
+  _trC.sel.add(n);
+  renderTrainConduct();
+}
+function trOnDate(val){
+  if (!val) return;
+  _trC.date = val;
+  trLoadExisting();
+  renderTrainConduct();
+}
+
+function saveTrainConduct(){
+  const c = _trC; if (!c) return;
+  if (currentUser.role !== 'admin' && c.date !== todayKey()) { showToast('🔒 Only today can be recorded'); return; }
+  const trainer = (c.trainer || '').trim();
+  if (!trainer) { showToast('Please enter the trainer name'); return; }
+  if (!c.sel.size) { showToast('Tick at least one attendee'); return; }
+  saveTrainSession({
+    building: c.bk, topicId: c.topicId, topicTitle: c.title, date: c.date, trainer: trainer,
+    attendees: c.roster.filter(function(n){ return c.sel.has(n); }),
+    absent: c.roster.filter(function(n){ return !c.sel.has(n); }),
+    remarks: (c.remarks || '').trim(),
+    trainerRating: c.trainerRating || 0,
+    staffRatings: (function(){ const o = {}; c.roster.forEach(function(n){ if (c.sel.has(n) && c.ratings[n] > 0) o[n] = c.ratings[n]; }); return o; })(),
+    by: currentUser.label, ts: new Date().toISOString()
+  });
+  closeTrainConduct();
+  renderTraining();
+  showToast('✅ Training attendance saved');
+}
+
+function openTrainHistory(bk, topicId){
+  const topic = getTrainTopics(bk).filter(function(t){ return t.id === topicId; })[0];
+  const map = getTrainSessions(bk);
+  const list = Object.keys(map).filter(function(k){ return map[k].topicId === topicId; })
+    .map(function(k){ return { id: k, s: map[k] }; })
+    .sort(function(a, b){ return b.s.date.localeCompare(a.s.date); });
+  document.getElementById('trHistTitle').textContent = '📋 ' + (topic ? topic.title : 'Training History');
+  const isAdmin = currentUser.role === 'admin';
+  document.getElementById('trHistBody').innerHTML = list.map(function(x){
+    const s = x.s, tot = s.attendees.length + (s.absent || []).length;
+    return '<div class="tr-hist"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><strong>' + formatDate(s.date) + '</strong>' +
+      '<span style="color:var(--text-muted);font-size:12px;">👷 ' + trE(s.trainer) + (s.trainerRating ? ' ' + trStars(s.trainerRating) : '') + ' · ' + s.attendees.length + '/' + tot + ' present</span></div>' +
+      '<div style="margin-top:6px;">' + s.attendees.map(function(n){ const r = (s.staffRatings || {})[n]; return '<span class="tr-chip">✓ ' + trE(n) + (r ? ' ' + '★'.repeat(r) : '') + '</span>'; }).join('') +
+      (s.absent || []).map(function(n){ return '<span class="tr-chip abs">✗ ' + trE(n) + '</span>'; }).join('') + '</div>' +
+      (s.remarks ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;font-style:italic;">📝 ' + trE(s.remarks) + '</div>' : '') +
+      (isAdmin ? '<button class="btn btn-danger" style="padding:3px 10px;font-size:11px;margin-top:6px;" onclick="deleteTrainSession(\'' + esc(bk) + '\',\'' + x.id + '\')">Delete</button>' : '') +
+      '</div>';
+  }).join('') || '<div class="tr-empty">No sessions yet.</div>';
+  document.getElementById('trHistoryModal').classList.add('open');
+}
+
+function exportTrainingCsv(){
+  const rows = [['Date', 'Building', 'Topic', 'Trainer', 'Trainer Rating', 'Staff Name', 'Status', 'Staff Rating', 'Remarks']];
+  currentUser.access.forEach(function(bk){
+    const map = getTrainSessions(bk);
+    Object.keys(map).map(function(k){ return map[k]; }).sort(function(a, b){ return a.date.localeCompare(b.date); }).forEach(function(s){
+      s.attendees.forEach(function(n){ rows.push([s.date, bk, s.topicTitle, s.trainer, s.trainerRating || '', n, 'Present', (s.staffRatings || {})[n] || '', s.remarks || '']); });
+      (s.absent || []).forEach(function(n){ rows.push([s.date, bk, s.topicTitle, s.trainer, s.trainerRating || '', n, 'Absent', '', s.remarks || '']); });
+    });
+  });
+  if (rows.length < 2) { showToast('No training records to export'); return; }
+  const csv = rows.map(function(r){ return r.map(function(v){ return '"' + String(v).replace(/"/g, '""') + '"'; }).join(','); }).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = 'GITAM_Staff_Training.csv';
+  a.click();
+  showToast('📥 CSV exported!');
+}
+
 
 function _ratingCls(avg) {
   return avg >= 4 ? 'rating-good' : avg >= 3 ? 'rating-mid' : 'rating-bad';
