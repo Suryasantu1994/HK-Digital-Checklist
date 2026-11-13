@@ -7143,8 +7143,20 @@ window.addEventListener('load', async function() {
 // without waiting for fonts, Firebase or images to finish loading.
 (function(){
   if (new URLSearchParams(location.search).get('feedback') !== '1') return;
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initFeedbackPage);
-  else initFeedbackPage();
+  // Show any script error on screen so it can be reported
+  function fbShowError(msg) {
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;background:#C0392B;color:#fff;padding:10px 12px;border-radius:8px;font:13px sans-serif;z-index:9999;word-break:break-word;';
+    d.textContent = 'Feedback error: ' + msg;
+    document.body.appendChild(d);
+  }
+  window.addEventListener('error', function(e) { fbShowError((e.message || 'script error') + (e.lineno ? ' (line ' + e.lineno + ')' : '')); });
+  function start() {
+    try { initFeedbackPage(); }
+    catch (e) { fbShowError(e && e.message ? e.message : String(e)); }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
 })();
 </script>
 
