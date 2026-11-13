@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GITAM Building Checklist System</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" media="print" onload="this.media='all'">
 <!-- Firebase Compat SDK (works without ES modules, available immediately) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
   const firebaseConfig = {
     apiKey:            "AIzaSyCQR-NGbFBz_0Rv4Fvd0etGIL-8RcdNTv4",
@@ -18,10 +18,14 @@
     messagingSenderId: "578218281711",
     appId:             "1:578218281711:web:ccb2a9b867316d9d48a91a"
   };
-  firebase.initializeApp(firebaseConfig);
-  window._db = firebase.firestore();
-  window.firebaseReady = true;
-  console.log("✅ Firebase Firestore ready");
+  document.addEventListener("DOMContentLoaded", function () {
+    try {
+      firebase.initializeApp(firebaseConfig);
+      window._db = firebase.firestore();
+      window.firebaseReady = true;
+      console.log("✅ Firebase Firestore ready");
+    } catch (e) { console.warn("Firebase unavailable:", e); }
+  });
 </script>
 <style>
 :root{
