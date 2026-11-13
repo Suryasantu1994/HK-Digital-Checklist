@@ -91,6 +91,9 @@
   var LABELS = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
   var db = null;
   var washroomMap = {};   // 'floor|ROOM' -> staff name
+  var floorStaff = [];    // today's floor staff names
+
+  function washroomNameFor(room) { return room ? (washroomMap[floor + '|' + normRoom(room)] || '') : ''; }
 
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
@@ -135,6 +138,7 @@
     if (!db || !building || !floor) return;
     db.collection('staff').doc(fsId('staff', building, floor, todayKey())).get().then(function (snap) {
       var names = snap.exists && snap.data() && Array.isArray(snap.data().staff) ? snap.data().staff.filter(Boolean) : [];
+      floorStaff = names;
       if (!names.length) return;
       $('staffBox').innerHTML = '<div>👷 <strong>Assigned Staff</strong></div><div style="margin-top:4px;">' +
         names.map(esc).join(', ') + '</div>';
@@ -166,9 +170,13 @@
     if (!userId) { $('userId').focus(); return showErr('Please enter your ID.'); }
     if (!userName) { $('userName').focus(); return showErr('Please enter your name.'); }
     hideErr();
-    var staff = [];
+    // Ratings count for the floor staff and, for a Men's washroom, its assigned washroom staff
+    var wrName = washroomNameFor(roomNo);
+    var staff = floorStaff.slice();
+    if (wrName && staff.indexOf(wrName) === -1) staff.push(wrName);
     var entry = {
       building: building, floor: floor, staff: staff,
+      washroomStaff: wrName || '',
       roomNo: roomNo, userId: userId, userName: userName,
       rating: rating, comment: $('comment').value.trim(),
       ts: new Date().toISOString(), date: new Date().toLocaleDateString('en-IN')

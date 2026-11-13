@@ -4887,8 +4887,12 @@ async function submitFeedback() {
   const comment = document.getElementById('fbComment').value.trim();
   const staffStr = fbPage.dataset.staff || '';
   const staff = staffStr ? staffStr.split(',').filter(Boolean) : [];
+  // Men's washroom: the assigned washroom staff also gets this rating
+  const wrName = getWrStaffFor(building, floor, roomNo);
+  if (wrName && staff.indexOf(wrName) === -1) staff.push(wrName);
   const entry = {
     building, floor, staff,
+    washroomStaff: wrName || '',
     roomNo, userId, userName,
     rating: _fbRating,
     comment,
