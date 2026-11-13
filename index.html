@@ -1937,8 +1937,17 @@ function updateFbWrStaff() {
   var bk = pg.dataset.building, fl = pg.dataset.floor;
   var room = (document.getElementById('fbRoomNo').value || '').trim();
   var item = room ? findFloorRoomItem(bk, fl, room) : null;
+  var staffWrap = document.getElementById('fbStaffWrap');
+  var name = item && isMensWashroom(item.name) ? getWrStaffFor(bk, fl, room) : '';
+  // Assigned washroom staff: show only that person; otherwise restore the floor staff
+  if (name) {
+    pg.dataset.staff = name;
+    if (staffWrap) staffWrap.style.display = 'none';
+  } else {
+    pg.dataset.staff = pg.dataset.floorStaff || '';
+    if (staffWrap) staffWrap.style.display = pg.dataset.floorStaff ? 'block' : 'none';
+  }
   if (!item || !isMensWashroom(item.name)) { box.style.display = 'none'; box.textContent = ''; return; }
-  var name = getWrStaffFor(bk, fl, room);
   box.innerHTML = '';
   var lbl = document.createElement('span');
   lbl.textContent = name ? '👷 Washroom staff: ' : 'No washroom staff assigned yet.';
@@ -4803,6 +4812,7 @@ function initFeedbackPage() {
     if (!staffWrap) return;
     if (names && names.length) {
       fbPage.dataset.staff = names.join(',');
+      fbPage.dataset.floorStaff = fbPage.dataset.staff;
       staffWrap.innerHTML =
         '<div class="fb-staff-label">&#x1F477; Assigned Staff</div>' +
         '<div class="fb-staff-chips">' +
@@ -4811,6 +4821,7 @@ function initFeedbackPage() {
       staffWrap.style.display = 'block';
     } else {
       fbPage.dataset.staff = '';
+      fbPage.dataset.floorStaff = '';
       staffWrap.style.display = 'none';
     }
   }
@@ -4885,11 +4896,10 @@ async function submitFeedback() {
   const building = fbPage.dataset.building;
   const floor = fbPage.dataset.floor;
   const comment = document.getElementById('fbComment').value.trim();
-  const staffStr = fbPage.dataset.staff || '';
-  const staff = staffStr ? staffStr.split(',').filter(Boolean) : [];
-  // Men's washroom: the assigned washroom staff also gets this rating
+  // Men's washroom with an assigned staff member: the rating goes to that person only
   const wrName = getWrStaffFor(building, floor, roomNo);
-  if (wrName && staff.indexOf(wrName) === -1) staff.push(wrName);
+  const staffStr = fbPage.dataset.staff || '';
+  const staff = wrName ? [wrName] : (staffStr ? staffStr.split(',').filter(Boolean) : []);
   const entry = {
     building, floor, staff,
     washroomStaff: wrName || '',

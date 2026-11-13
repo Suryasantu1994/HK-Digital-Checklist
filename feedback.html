@@ -128,9 +128,17 @@
     var room = $('roomNo').value.trim();
     var name = room ? washroomMap[floor + '|' + normRoom(room)] : '';
     var box = $('wrBox');
-    if (!name) { box.style.display = 'none'; box.innerHTML = ''; return; }
+    if (!name) { box.style.display = 'none'; box.innerHTML = ''; showFloorStaff(true); return; }
+    // Men's washroom with an assigned staff member: rate only that person
+    showFloorStaff(false);
     box.innerHTML = '👷 Washroom staff: <strong>' + esc(name) + '</strong>';
     box.style.display = 'block';
+  }
+
+  // Floor staff box: hidden while a washroom with an assigned staff member is shown
+  function showFloorStaff(show) {
+    var box = $('staffBox');
+    box.style.display = (show && floorStaff.length) ? 'block' : 'none';
   }
 
   // Floor staff for today
@@ -142,7 +150,7 @@
       if (!names.length) return;
       $('staffBox').innerHTML = '<div>👷 <strong>Assigned Staff</strong></div><div style="margin-top:4px;">' +
         names.map(esc).join(', ') + '</div>';
-      $('staffBox').style.display = 'block';
+      showFloorStaff(!washroomNameFor($('roomNo').value.trim()));
     }).catch(function () {});
   }
 
@@ -170,10 +178,9 @@
     if (!userId) { $('userId').focus(); return showErr('Please enter your ID.'); }
     if (!userName) { $('userName').focus(); return showErr('Please enter your name.'); }
     hideErr();
-    // Ratings count for the floor staff and, for a Men's washroom, its assigned washroom staff
+    // Men's washroom with an assigned staff member: the rating goes to that person only
     var wrName = washroomNameFor(roomNo);
-    var staff = floorStaff.slice();
-    if (wrName && staff.indexOf(wrName) === -1) staff.push(wrName);
+    var staff = wrName ? [wrName] : floorStaff.slice();
     var entry = {
       building: building, floor: floor, staff: staff,
       washroomStaff: wrName || '',
