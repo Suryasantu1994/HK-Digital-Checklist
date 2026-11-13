@@ -356,6 +356,10 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 .qr-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 .qr-btn-list{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px;}
 
+/* WASHROOM STAFF */
+.wr-staff-row{display:flex;align-items:center;gap:10px;padding:4px 14px 10px 52px;font-size:12px;color:var(--text-muted);flex-wrap:wrap;}
+.wr-staff-row select{padding:5px 10px;border:2px solid var(--border);border-radius:8px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--white);min-width:180px;}
+.wr-staff-row select:disabled{opacity:.6;}
 /* FLOOR QR BUTTON in floor header */
 .btn-qr{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:white;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;display:inline-flex;align-items:center;gap:5px;}
 .btn-qr:hover{background:rgba(255,255,255,.28);}
@@ -1149,18 +1153,8 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
 </head>
 <body>
 
-<!-- Redirect old QR codes (?feedback=1) to standalone feedback.html instantly -->
-<script>
-  (function(){
-    var params = new URLSearchParams(window.location.search);
-    if(params.get('feedback')==='1'){
-      var b = params.get('b') || '';
-      var f = params.get('f') || '';
-      var base = window.location.href.split('?')[0].replace(/\/[^\/]*$/, '/');
-      window.location.replace(base + 'feedback.html?b=' + encodeURIComponent(b) + '&f=' + encodeURIComponent(f));
-    }
-  })();
-</script>
+<!-- Feedback QR scans: hide login screen instantly -->
+<script>if(new URLSearchParams(location.search).get('feedback')==='1'){document.write('<style>#loginPage{display:none!important}</style>');}</script>
 
 <!-- LOGIN -->
 <div id="loginPage">
@@ -1333,7 +1327,7 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
       <div class="fb-input-row">
         <div class="fb-input-group">
           <label>Room No. <span style="color:var(--red);">*</span></label>
-          <input type="text" id="fbRoomNo" placeholder="e.g. 301" maxlength="20" oninput="checkFbReady()">
+          <input type="text" id="fbRoomNo" placeholder="e.g. 301" maxlength="20" oninput="checkFbReady();updateFbWrStaff()">
         </div>
         <div class="fb-input-group">
           <label>Your ID <span style="color:var(--red);">*</span></label>
@@ -1344,6 +1338,7 @@ background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.06) 0%,transpare
           <input type="text" id="fbUserName" placeholder="e.g. Ravi Kumar" maxlength="60" oninput="checkFbReady()">
         </div>
       </div>
+      <div id="fbWrStaff" style="display:none;margin-bottom:18px;padding:12px 14px;background:#FFF8E8;border-radius:10px;border:1px solid #FFD580;font-size:13px;color:var(--text);"></div>
       <div class="fb-section-label">Rate Cleanliness</div>
       <div class="stars-row" id="fbStars">
         <button class="star-btn" data-v="1" onclick="setFbStar(1)" onmouseenter="hoverFbStar(1)" onmouseleave="unHoverFbStar()">★</button>
@@ -1697,6 +1692,7 @@ async function preloadBuildingData(building, date) {
   var b = BUILDINGS[building];
   if (!b) return;
 
+  if (isWrStaffBuilding(building)) await loadWrStaffFromFirestore(building);
   var allFloors = Object.keys(b.floors).concat(
     Object.keys(b.extra).map(function(c){ return '_extra_' + c; })
   );
@@ -1874,6 +1870,77 @@ function setStaff(building, floor, arr, date) {
   _fsWrite('staff', _fsId('staff', building, floor, d),
     { staff: safeArr, building: building, floor: floor, date: d },
     lsKey, safeArr);
+}
+
+// ── WASHROOM STAFF (Men's washrooms: Shivaji & Visvesvaraya Bhavan) ──────────
+const WR_STAFF_BUILDINGS = ['Shivaji Bhavan', 'Visvesvaraya Bhavan'];
+function isWrStaffBuilding(bk) { return WR_STAFF_BUILDINGS.indexOf(bk) !== -1; }
+function isMensWashroom(name) {
+  var n = name || '';
+  return /washroom|wash room/i.test(n) && /men'?s|\bgents\b/i.test(n) && !/wom[ae]n|ladies|girls/i.test(n);
+}
+function normWrRoom(r) { return String(r || '').toUpperCase().replace(/\s+/g, ''); }
+function wrStaffKey(bk) { return 'gitam_wr_staff_' + bk; }
+function getWrStaffMap(bk) { var m = _lsRead(wrStaffKey(bk), {}); return (m && typeof m === 'object') ? m : {}; }
+function getWrStaffFor(bk, floor, room) { return getWrStaffMap(bk)[floor + '|' + normWrRoom(room)] || ''; }
+function setWrStaffFor(bk, floor, room, name) {
+  if (!canEdit()) { showToast('🔒 Cannot edit for this date'); return; }
+  var m = getWrStaffMap(bk), k = floor + '|' + normWrRoom(room);
+  if (name) m[k] = name; else delete m[k];
+  // One Firestore doc per washroom (avoids merge issues when clearing a value)
+  _fsWrite('washroomStaff', _fsId('wrstaff', bk, floor, normWrRoom(room)),
+    { staff: name || '', building: bk, floor: floor, room: room }, wrStaffKey(bk), m);
+  showToast(name ? '👷 ' + name + ' assigned' : '👷 Washroom staff removed');
+}
+async function loadWrStaffFromFirestore(bk) {
+  var db = _getDb();
+  if (!db) return;
+  try {
+    var snap = await db.collection('washroomStaff').where('building', '==', bk).get();
+    var m = {};
+    snap.forEach(function(d) {
+      var x = d.data() || {};
+      if (x.staff && x.floor && x.room) m[x.floor + '|' + normWrRoom(x.room)] = x.staff;
+    });
+    localStorage.setItem(wrStaffKey(bk), JSON.stringify(m));
+  } catch (e) { console.warn('Washroom staff load failed:', e); }
+}
+function wrStaffRowHtml(bk, floor, room, edit) {
+  var cur = getWrStaffFor(bk, floor, room);
+  var names = getStaffNamesList(bk);
+  if (cur && names.indexOf(cur) === -1) names = [cur].concat(names);
+  var opts = '<option value="">— Unassigned —</option>' + names.map(function(n) {
+    return '<option value="' + n + '"' + (n === cur ? ' selected' : '') + '>' + n + '</option>';
+  }).join('');
+  return '<div class="wr-staff-row no-print"><span>👷 Washroom staff:</span>' +
+    '<select ' + (edit ? '' : 'disabled') + ' data-room="' + encodeURIComponent(room) +
+    '" onchange="assignWrStaffFromEl(this)">' + opts + '</select></div>';
+}
+function assignWrStaffFromEl(el) {
+  setWrStaffFor(currentBuilding, currentFloor, decodeURIComponent(el.dataset.room), el.value);
+}
+function findFloorRoomItem(bk, floor, room) {
+  var b = getBuildings()[bk];
+  if (!b || !b.floors[floor]) return null;
+  var target = normWrRoom(room);
+  return b.floors[floor].find(function(it) { return normWrRoom(it.room) === target; }) || null;
+}
+// Feedback page: show the assigned washroom staff as soon as a Men's washroom room is typed
+function updateFbWrStaff() {
+  var box = document.getElementById('fbWrStaff');
+  if (!box) return;
+  var pg = document.getElementById('feedbackPage');
+  var bk = pg.dataset.building, fl = pg.dataset.floor;
+  var room = (document.getElementById('fbRoomNo').value || '').trim();
+  var item = room ? findFloorRoomItem(bk, fl, room) : null;
+  if (!item || !isMensWashroom(item.name)) { box.style.display = 'none'; box.textContent = ''; return; }
+  var name = getWrStaffFor(bk, fl, room);
+  box.innerHTML = '';
+  var lbl = document.createElement('span');
+  lbl.textContent = name ? '👷 Washroom staff: ' : 'No washroom staff assigned yet.';
+  box.appendChild(lbl);
+  if (name) { var st = document.createElement('strong'); st.textContent = name; box.appendChild(st); }
+  box.style.display = 'block';
 }
 
 // ── FREQUENCY CHECKS ────────────────────────────────────────────────────────
@@ -3340,6 +3407,8 @@ function renderFloorItems() {
     const freq = isWR ? getFreq(bk, currentFloor, origIdx, viewingDate) : [];
     const freqChips = freq.map((t,fi)=>`<span class="freq-chip">${t}<button onclick="removeFreqCheck(${origIdx},${fi})" title="Remove">✕</button></span>`).join('');
     const freqBtnHtml = isWR ? `<button class="freq-btn ${freq.length?'has-freq':''} no-print" onclick="toggleFreq(${origIdx})" title="Frequency Check">🕐 ${freq.length?freq.length+'x':'Check'}</button>` : '';
+    const wrRowHtml = (isWR && isWrStaffBuilding(bk) && isMensWashroom(filtered[i].name) && filtered[i].room)
+      ? wrStaffRowHtml(bk, currentFloor, filtered[i].room, edit) : '';
     const freqRowHtml = isWR ? `
       <div class="freq-row" id="freq-row-${origIdx}">
         <div class="freq-row-inner">
@@ -3363,6 +3432,7 @@ function renderFloorItems() {
         </div>
         ${doneTs ? `<div class="req-time" style="text-align:right;padding-right:2px;">✅ ${formatTs(doneTs)}</div>` : ''}
       </div>
+      ${wrRowHtml}
       ${freqRowHtml}
       <div class="note-row ${(note || _openNoteRows.has(origIdx))?'open':''}" id="note-row-${origIdx}">
         <textarea ${!edit?'disabled':''} placeholder="Add a note..." onchange="saveNote(${origIdx},this.value)">${note}</textarea>
@@ -4502,8 +4572,8 @@ function getFeedbackUrl(building, floor) {
   if (!base) return null;
   // Point QR codes to the standalone feedback.html page (same folder).
   // This page works independently — no login, no main app logic needed.
-  const feedbackBase = base.replace(/\/[^\/]*$/, '/feedback.html');
-  return feedbackBase + '?b=' + encodeURIComponent(building) + '&f=' + encodeURIComponent(floor);
+  const feedbackBase = base.split('?')[0].split('#')[0];
+  return feedbackBase + '?feedback=1&b=' + encodeURIComponent(building) + '&f=' + encodeURIComponent(floor);
 }
 
 function showQrModal(building, floor) {
@@ -4746,6 +4816,10 @@ function initFeedbackPage() {
   const lsKey    = 'gitam_staff_' + building + '_' + floor + '_' + today;
   const cached   = _lsRead(lsKey, []);
   renderStaff(cached);
+  if (isWrStaffBuilding(building)) {
+    updateFbWrStaff();
+    loadWrStaffFromFirestore(building).then(updateFbWrStaff);
+  }
 
   // ── Step 2: Fetch live from Firestore and update the panel ──────────────────
   // This ensures that even if the QR was printed before staff were assigned,
