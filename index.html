@@ -4576,8 +4576,8 @@ function getFeedbackUrl(building, floor) {
   if (!base) return null;
   // Point QR codes to the standalone feedback.html page (same folder).
   // This page works independently — no login, no main app logic needed.
-  const feedbackBase = base.split('?')[0].split('#')[0];
-  return feedbackBase + '?feedback=1&b=' + encodeURIComponent(building) + '&f=' + encodeURIComponent(floor);
+  const feedbackBase = base.replace(/\/[^\/]*$/, '/feedback.html');
+  return feedbackBase + '?b=' + encodeURIComponent(building) + '&f=' + encodeURIComponent(floor);
 }
 
 function showQrModal(building, floor) {
